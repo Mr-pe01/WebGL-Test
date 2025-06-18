@@ -137,6 +137,7 @@
             border-radius: 4px;
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 
 <body>
@@ -199,18 +200,18 @@
 
     <!-- JavaScript开始 - 这里是WebGL的核心逻辑 -->
     <script>
+        // ========== 1. 远程加载shader的工具函数 ==========
+        // 用于通过fetch加载远程shader文件（支持本地和远程）
+        async function loadShader(url) {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('无法加载shader: ' + url);
+            return await response.text();
+        }
 
-        // 全局变量声明 - 存储WebGL核心组件
-        // let - ES6块级作用域变量声明，比var更安全
-        let scene,      // THREE.Scene对象 - 3D场景容器
-            camera,     // THREE.Camera对象 - 虚拟相机
-            renderer,   // THREE.WebGLRenderer对象 - 渲染器
-            controls;   // THREE.OrbitControls对象 - 交互控制器
+        // ========== 2. WebGL主流程相关全局变量 ==========
+        let scene, camera, renderer, controls, waterMesh, testObjects = {};
 
-        // 3D对象变量
-        let waterMesh,           // 水面网格对象
-            testObjects = {};    // 测试物体对象集合，使用对象字面量语法
-
+        // ========== 3. 进度条相关 ==========
         // 进度管理 - 获取HTML元素引用
         // document.getElementById() - 通过ID获取DOM元素
         // const - 常量声明，获取后不会重新赋值
@@ -241,49 +242,29 @@
             }  // if语句结束
         }  // 函数结束
 
-        /* ===================== 🚀 应用初始化流程 ===================== */
+        // ========== 4. 应用初始化主流程 ==========
+        async function initCartoonWorld() {
+            try {
+                updateProgress(20, '🔧 初始化WebGL渲染器...');
+                await initWebGLRenderer();
+                updateProgress(40, '🌈 创建卡通天空...');
+                await createCartoonSkybox();
+                updateProgress(60, '💡 设置卡通光照...');
+                setupCartoonLighting();
+                updateProgress(80, '🌊 创建卡通水面...');
+                createCartoonWater();
+                updateProgress(90, '🎪 添加测试物体...');
+                createTestObjects();
+                updateProgress(95, '🎬 启动动画循环...');
+                startRenderLoop();
+                updateProgress(100, '✨ 卡通世界创建完成！');
+            } catch (error) {
+                console.error('❌ 初始化失败:', error);
+                updateProgress(0, '❌ 创建失败，请检查控制台');
+            }
+        }
 
-        // 异步函数 - 主要的应用初始化函数
-        // async - 声明异步函数，可以使用await等待异步操作
-        async function initCartoonWorld() {  // 函数名使用驼峰命名法
-            // try-catch - 错误处理语句，捕获可能的异常
-            try {  // 尝试执行以下代码
-                // 步骤1: 初始化WebGL渲染器
-                updateProgress(20, '🔧 初始化WebGL渲染器...');  // 更新进度到20%
-                await initWebGLRenderer();  // await等待异步函数完成
-
-                // 步骤2: 创建天空盒子 (使用外部shader文件)
-                updateProgress(40, '🌈 创建卡通天空...');  // 更新进度到40%
-                await createCartoonSkybox();  // 调用天空盒子创建函数 (现在是async)
-
-                // 步骤3: 设置光照系统
-                updateProgress(60, '💡 设置卡通光照...');  // 更新进度到60%
-                setupCartoonLighting();  // 调用光照设置函数
-
-                // 步骤4: 创建水面
-                updateProgress(80, '🌊 创建卡通水面...');  // 更新进度到80%
-                createCartoonWater();  // 调用水面创建函数
-
-                // 步骤5: 添加测试物体
-                updateProgress(90, '🎪 添加测试物体...');  // 更新进度到90%
-                createTestObjects();  // 调用测试物体创建函数
-
-                // 步骤6: 启动渲染循环
-                updateProgress(95, '🎬 启动动画循环...');  // 更新进度到95%
-                startRenderLoop();  // 调用渲染循环启动函数
-
-                // 完成初始化
-                updateProgress(100, '✨ 卡通世界创建完成！');  // 进度100%
-
-            } catch (error) {  // catch捕获异常
-                // console.error - 在控制台输出错误信息
-                console.error('❌ 初始化失败:', error);  // 输出错误对象
-                updateProgress(0, '❌ 创建失败，请检查控制台');  // 显示错误信息
-            }  // try-catch结束
-        }  // 函数结束
-
-        /* ===================== 🔧 WebGL渲染器初始化 ===================== */
-
+        // ========== 5. WebGL渲染器初始化 ==========
         // WebGL渲染器初始化函数 - 这是WebGL的核心设置
         async function initWebGLRenderer() {  // 异步函数，可能需要等待资源加载
 
@@ -358,40 +339,29 @@
             document.head.appendChild(script);
         }
 
-        /* ===================== 🌈 卡通风格天空盒子 ===================== */
-
+        // ========== 6. 天空盒创建（分文件加载shader） ==========
         async function createCartoonSkybox() {
-            // 创建天空球体几何
             const skyGeometry = new THREE.SphereGeometry(500, 32, 32);
-
-            // 远程加载shader源码
-            const shaderSource = await loadShader('https://mr-pe01.github.io/WebGL-Test/shaders/CartoonSky_Simple.shader');
-            const { vertexShader, fragmentShader } = parseUnityStyleShader(shaderSource);
-
-            // 创建材质 - 就像Unity的Material一样设置参数
+            // 分别加载顶点和片元shader
+            const vertexShader = await loadShader('shaders/sky.vert');
+            const fragmentShader = await loadShader('shaders/sky.frag');
             const skyMaterial = new THREE.ShaderMaterial({
-                vertexShader: vertexShader,
-                fragmentShader: fragmentShader,
+                vertexShader, fragmentShader,
                 uniforms: {
-                    // 材质参数 - 类似Unity Inspector面板
-                    topColor: { value: new THREE.Color(0x87CEEB) },    // 天蓝色
-                    middleColor: { value: new THREE.Color(0xFFB6C1) }, // 浅粉色  
-                    bottomColor: { value: new THREE.Color(0xFFFACD) }, // 柠檬白色
+                    topColor: { value: new THREE.Color(0x87CEEB) },
+                    middleColor: { value: new THREE.Color(0xFFB6C1) },
+                    bottomColor: { value: new THREE.Color(0xFFFACD) },
                     offset: { value: 33 },
                     exponent: { value: 0.6 }
                 },
-                side: THREE.BackSide  // 从内部观看
+                side: THREE.BackSide
             });
-
-            // 创建天空网格并添加到场景
             const sky = new THREE.Mesh(skyGeometry, skyMaterial);
             scene.add(sky);
-
-            console.log('✅ 卡通天空创建完成 - 远程shader');
+            console.log('✅ 卡通天空创建完成 - 分文件shader');
         }
 
-        /* ===================== 💡 卡通风格光照系统 ===================== */
-
+        // ========== 7. 其它功能函数（光照、水面、物体、动画、响应式等）==========
         function setupCartoonLighting() {
 
             /*
@@ -465,8 +435,6 @@
             console.log('✅ 补光设置完成 - 淡蓝色,强度0.4');
         }
 
-        /* ===================== 🌊 卡通风格水面 ===================== */
-
         function createCartoonWater() {
 
             /*
@@ -506,8 +474,6 @@
             scene.add(waterMesh);
             console.log('✅ 卡通水面创建完成 - 青绿色,透明度70%');
         }
-
-        /* ===================== 🎪 测试物体 ===================== */
 
         function createTestObjects() {
 
@@ -549,8 +515,6 @@
 
             console.log('✅ 测试物体创建完成 - 粉红立方体、黄色球体、薄荷圆锥');
         }
-
-        /* ===================== 🎬 动画循环系统 ===================== */
 
         function startRenderLoop() {
             const startTime = Date.now();
@@ -612,15 +576,8 @@
 
         // 启动应用
         window.addEventListener('load', async () => {
-            try {
-                updateProgress(10, '📦 加载Three.js库...');
-                await new Promise(resolve => setTimeout(resolve, 500));
-
-                updateProgress(15, '🎨 开始创建卡通世界...');
-                await initCartoonWorld();
-            } catch (error) {
-                console.error('❌ 应用启动失败:', error);
-            }
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await initCartoonWorld();
         });
 
         /* ===================== 🛠️ 调试工具 ===================== */
