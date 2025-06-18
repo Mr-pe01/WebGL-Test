@@ -454,15 +454,10 @@
 
             // 卡通水面材质
             const waterMaterial = new THREE.MeshLambertMaterial({
-                color: 0x4ECDC4,        // 青绿色 - 卡通水的经典色彩
-                transparent: true,       // 启用透明度
-                opacity: 0.7,           // 透明度70%
-                side: THREE.DoubleSide, // 双面渲染
-
-                // 卡通风格特殊设置
-                flatShading: false,     // 平滑着色
-                reflectivity: 0.3,      // 反射率
-                shininess: 100          // 光泽度
+                color: 0x4ECDC4,
+                transparent: true,
+                opacity: 0.7,
+                side: THREE.DoubleSide
             });
 
             // 创建水面网格
