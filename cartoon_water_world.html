@@ -1,0 +1,640 @@
+<!DOCTYPE html> <!-- HTML5文档类型声明 - 告诉浏览器这是现代HTML -->
+<html lang="zh-CN"> <!-- HTML根元素开始，lang="zh-CN"设置页面语言为简体中文 -->
+
+<head>
+    <meta charset="UTF-8"> <!-- 设置字符编码为UTF-8，支持中文和各种特殊字符 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- 移动端适配 - 让页面在手机上正常显示 -->
+    <title>🎨 卡通水面世界</title> <!-- 浏览器标签页显示的标题 -->
+    <!-- CSS样式开始 - 定义页面的外观和布局 -->
+    <style>
+        /* =================== 🎨 卡通风格CSS =================== */
+        /* CSS重置 - 消除浏览器默认样式差异 */
+        * {
+            margin: 0;
+            /* 外边距设为0 - 消除元素间的默认间距 */
+            padding: 0;
+            /* 内边距设为0 - 消除元素内的默认间距 */
+            box-sizing: border-box;
+            /* 边框盒模型 - width包含padding和border */
+        }
+
+        /* body元素样式 - 定义整个页面的基础外观 */
+        body {
+            /* 背景渐变 - 从左上到右下的渐变色 */
+            background: linear-gradient(135deg, #87a0c0 0%, #15263f 100%);
+            /* 135度角渐变 */
+            font-family: '微软雅黑', Arial, sans-serif;
+            /* 字体族 - 优先使用微软雅黑，备选Arial */
+            overflow: hidden;
+            /* 隐藏滚动条 - 创造全屏3D体验 */
+        }
+
+        /* WebGL画布样式 - 这是3D图形的渲染目标 */
+        #canvas {
+            display: block;
+            /* 块级元素 - 独占一行 */
+            width: 100vw;
+            /* 宽度100%视口宽度 - 全屏宽度 */
+            height: 100vh;
+            /* 高度100%视口高度 - 全屏高度 */
+            cursor: grab;
+            /* 鼠标样式 - 显示可抓取的手型 */
+        }
+
+        /* 鼠标按下时的样式 - 伪类选择器 */
+        #canvas:active {
+            cursor: grabbing;
+            /* 鼠标按下时显示抓取中的手型 */
+        }
+
+        /* 学习面板 - 卡通风格设计 */
+        .learning-panel {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(180deg, #4e4cc9a2 0%, #e5b3e381 100%);
+            color: #2d3436;
+            padding: 25px;
+            border-radius: 20px;
+            max-width: 400px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border: 4px solid #fd79a8;
+            z-index: 1000;
+        }
+
+        .learning-panel h2 {
+            color: #e84393;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .concept {
+            margin: 15px 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
+            border-radius: 15px;
+            border-left: 5px solid #00b894;
+        }
+
+        .concept-title {
+            font-weight: bold;
+            color: #2d3436;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .concept-desc {
+            font-size: 12px;
+            line-height: 1.5;
+            color: #636e72;
+        }
+
+        /* 控制面板 */
+        .controls-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(-90deg, #5181be8a 0%, #c295d650 100%);
+            color: rgb(21, 71, 148);
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 13px;
+            border: 2px solid #1e6296;
+        }
+
+        /* 进度条 */
+        .progress-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 2000;
+        }
+
+        .progress-text {
+            color: #2d3436;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 6px;
+            overflow: hidden;
+            border: 2px solid #fd79a8;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #fd79a8, #fdcb6e);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- WebGL学习面板 -->
+    <div class="learning-panel">
+        <h2>🎓 WebGL vs Unity 对比学习</h2>
+
+        <div class="concept">
+            <div class="concept-title">🌍 Scene (场景)</div>
+            <div class="concept-desc">
+                Unity: Scene文件 + Hierarchy面板<br>
+                WebGL: new THREE.Scene() + scene.add()
+            </div>
+        </div>
+
+        <div class="concept">
+            <div class="concept-title">📷 Camera (相机)</div>
+            <div class="concept-desc">
+                Unity: Camera组件 + Inspector设置<br>
+                WebGL: new THREE.PerspectiveCamera(fov, aspect, near, far)
+            </div>
+        </div>
+
+        <div class="concept">
+            <div class="concept-title">🎭 Material (材质)</div>
+            <div class="concept-desc">
+                Unity: Material文件 + Shader<br>
+                WebGL: THREE.Material + GLSL Shader
+            </div>
+        </div>
+
+        <div class="concept">
+            <div class="concept-title">💡 Light (光照)</div>
+            <div class="concept-desc">
+                Unity: Light组件 + Lighting窗口<br>
+                WebGL: THREE.Light + renderer.shadowMap
+            </div>
+        </div>
+    </div>
+
+    <!-- 控制说明 -->
+    <div class="controls-panel">
+        <strong>🎮 鼠标控制:</strong><br>
+        ——————————<br>
+        🖱️ 滚轮滚动 = 缩放远近<br>
+        🖱️ 左键拖拽 = 旋转视角<br>
+        🖱️ 中键拖拽 = 平移画面<br>
+    </div>
+
+    <!-- 加载进度 -->
+    <div class="progress-container" id="progressContainer">
+        <div class="progress-text" id="progressText">🌈 正在创建卡通世界...</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+
+    <!-- WebGL画布 -->
+    <canvas id="canvas"></canvas>
+
+    <!-- JavaScript开始 - 这里是WebGL的核心逻辑 -->
+    <script>
+
+        // 全局变量声明 - 存储WebGL核心组件
+        // let - ES6块级作用域变量声明，比var更安全
+        let scene,      // THREE.Scene对象 - 3D场景容器
+            camera,     // THREE.Camera对象 - 虚拟相机
+            renderer,   // THREE.WebGLRenderer对象 - 渲染器
+            controls;   // THREE.OrbitControls对象 - 交互控制器
+
+        // 3D对象变量
+        let waterMesh,           // 水面网格对象
+            testObjects = {};    // 测试物体对象集合，使用对象字面量语法
+
+        // 进度管理 - 获取HTML元素引用
+        // document.getElementById() - 通过ID获取DOM元素
+        // const - 常量声明，获取后不会重新赋值
+        const progressFill = document.getElementById('progressFill');        // 进度条填充元素
+        const progressText = document.getElementById('progressText');        // 进度文字元素
+        const progressContainer = document.getElementById('progressContainer');  // 进度容器元素
+
+        // 更新进度函数 - 函数声明语法
+        function updateProgress(percent, text) {  // 接收两个参数：进度百分比和显示文字
+            // 设置进度条宽度 - 通过CSS style属性
+            progressFill.style.width = percent + '%';  // 字符串拼接，设置width样式
+
+            // 设置进度文字 - textContent属性设置元素文本内容
+            progressText.textContent = text;  // 更新显示的进度文字
+
+            // 条件判断 - 如果进度达到100%，执行隐藏动画
+            if (percent >= 100) {  // >= 大于等于运算符
+                // setTimeout - 延时执行函数，1000毫秒 = 1秒后执行
+                setTimeout(() => {  // 箭头函数语法 (ES6)
+                    // 设置透明度为0，开始淡出动画
+                    progressContainer.style.opacity = '0';
+
+                    // 嵌套setTimeout - 500毫秒后完全隐藏元素
+                    setTimeout(() => {  // 内层延时函数
+                        progressContainer.style.display = 'none';  // 设置display为none完全隐藏
+                    }, 500);  // 500毫秒延时
+                }, 1000);  // 1000毫秒延时
+            }  // if语句结束
+        }  // 函数结束
+
+        /* ===================== 🚀 应用初始化流程 ===================== */
+
+        // 异步函数 - 主要的应用初始化函数
+        // async - 声明异步函数，可以使用await等待异步操作
+        async function initCartoonWorld() {  // 函数名使用驼峰命名法
+            // try-catch - 错误处理语句，捕获可能的异常
+            try {  // 尝试执行以下代码
+                // 步骤1: 初始化WebGL渲染器
+                updateProgress(20, '🔧 初始化WebGL渲染器...');  // 更新进度到20%
+                await initWebGLRenderer();  // await等待异步函数完成
+
+                // 步骤2: 创建天空盒子 (使用外部shader文件)
+                updateProgress(40, '🌈 创建卡通天空...');  // 更新进度到40%
+                await createCartoonSkybox();  // 调用天空盒子创建函数 (现在是async)
+
+                // 步骤3: 设置光照系统
+                updateProgress(60, '💡 设置卡通光照...');  // 更新进度到60%
+                setupCartoonLighting();  // 调用光照设置函数
+
+                // 步骤4: 创建水面
+                updateProgress(80, '🌊 创建卡通水面...');  // 更新进度到80%
+                createCartoonWater();  // 调用水面创建函数
+
+                // 步骤5: 添加测试物体
+                updateProgress(90, '🎪 添加测试物体...');  // 更新进度到90%
+                createTestObjects();  // 调用测试物体创建函数
+
+                // 步骤6: 启动渲染循环
+                updateProgress(95, '🎬 启动动画循环...');  // 更新进度到95%
+                startRenderLoop();  // 调用渲染循环启动函数
+
+                // 完成初始化
+                updateProgress(100, '✨ 卡通世界创建完成！');  // 进度100%
+
+            } catch (error) {  // catch捕获异常
+                // console.error - 在控制台输出错误信息
+                console.error('❌ 初始化失败:', error);  // 输出错误对象
+                updateProgress(0, '❌ 创建失败，请检查控制台');  // 显示错误信息
+            }  // try-catch结束
+        }  // 函数结束
+
+        /* ===================== 🔧 WebGL渲染器初始化 ===================== */
+
+        // WebGL渲染器初始化函数 - 这是WebGL的核心设置
+        async function initWebGLRenderer() {  // 异步函数，可能需要等待资源加载
+
+            // 🎯 第一步：创建3D场景 (Scene)
+            scene = new THREE.Scene();  // THREE.Scene构造函数，创建场景实例
+            console.log('✅ 3D场景创建成功 - 这是所有3D物体的容器');  // 调试信息
+
+            // 🎯 第二步：创建透视相机 (Perspective Camera => FOV - 宽高比 - 近裁剪距离 - 原裁剪距离)
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+            // 设置相机的初始位置 - 使用3D坐标系
+            camera.position.set(0, 20, 30);  // x=0(居中), y=20(高度), z=30(距离原点的远近)
+
+            // 设置相机朝向 - 指定相机看向的目标点
+            camera.lookAt(0, 0, 0);          // 看向世界坐标原点(0,0,0)
+
+            // 输出调试信息到控制台
+            console.log('✅ 透视相机创建成功 - FOV:75°, 位置:(0,20,30)');
+
+            // 🎯 第三步：创建WebGL渲染器 (WebGL Renderer)
+            const canvas = document.getElementById('canvas');
+            renderer = new THREE.WebGLRenderer({
+                canvas: canvas,                    // 指定渲染目标Canvas
+                antialias: true,                  // 抗锯齿 - 让边缘更平滑
+                alpha: true,                      // 支持透明背景
+                powerPreference: "high-performance" // 优先使用独立显卡
+            });
+
+            // 设置渲染器尺寸和像素密度
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio); // 高DPI屏幕适配
+
+            // 配置渲染质量
+            renderer.shadowMap.enabled = true;                   // 启用阴影
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;    // 软阴影算法
+            renderer.outputEncoding = THREE.sRGBEncoding;        // 颜色空间校正
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;  // 色调映射
+            renderer.toneMappingExposure = 1;                    // 曝光值
+
+            console.log('✅ WebGL渲染器创建成功 - 支持阴影、抗锯齿、色调映射');
+
+            /*
+             * 🎯 第四步：设置交互控制 (Orbit Controls)
+             * Unity: 需要自己写Camera Controller脚本处理Input
+             * WebGL: Three.js提供现成的OrbitControls
+             */
+            // 注意：OrbitControls需要从CDN加载，这里先创建占位函数
+            setupOrbitControls();
+        }
+
+        function setupOrbitControls() {
+            // 动态加载OrbitControls
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
+            script.onload = () => {
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;         // 启用阻尼
+                controls.dampingFactor = 0.25;         // 阻尼系数
+                controls.minDistance = 5;              // 最近距离
+                controls.maxDistance = 100;            // 最远距离
+                controls.maxPolarAngle = Math.PI / 2.1;  // 最大仰角
+
+                // 🖱️ 自定义鼠标按键映射
+                controls.mouseButtons = {
+                    LEFT: THREE.MOUSE.ROTATE,    // 左键：旋转视角
+                    MIDDLE: THREE.MOUSE.PAN,     // 中键：平移画面
+                    RIGHT: undefined             // 右键：禁用
+                };
+
+                console.log('✅ 轨道控制器加载成功 - 左键旋转，中键平移，右键菜单保留');
+            };
+            document.head.appendChild(script);
+        }
+
+        /* ===================== 🌈 卡通风格天空盒子 ===================== */
+
+        async function createCartoonSkybox() {
+            // 创建天空球体几何
+            const skyGeometry = new THREE.SphereGeometry(500, 32, 32);
+
+            // 远程加载shader源码
+            const shaderSource = await loadShader('https://mr-pe01.github.io/WebGL-Test/shaders/CartoonSky_Simple.shader');
+            const { vertexShader, fragmentShader } = parseUnityStyleShader(shaderSource);
+
+            // 创建材质 - 就像Unity的Material一样设置参数
+            const skyMaterial = new THREE.ShaderMaterial({
+                vertexShader: vertexShader,
+                fragmentShader: fragmentShader,
+                uniforms: {
+                    // 材质参数 - 类似Unity Inspector面板
+                    topColor: { value: new THREE.Color(0x87CEEB) },    // 天蓝色
+                    middleColor: { value: new THREE.Color(0xFFB6C1) }, // 浅粉色  
+                    bottomColor: { value: new THREE.Color(0xFFFACD) }, // 柠檬白色
+                    offset: { value: 33 },
+                    exponent: { value: 0.6 }
+                },
+                side: THREE.BackSide  // 从内部观看
+            });
+
+            // 创建天空网格并添加到场景
+            const sky = new THREE.Mesh(skyGeometry, skyMaterial);
+            scene.add(sky);
+
+            console.log('✅ 卡通天空创建完成 - 远程shader');
+        }
+
+        /* ===================== 💡 卡通风格光照系统 ===================== */
+
+        function setupCartoonLighting() {
+
+            /*
+             * 🎨 卡通光照的特点：
+             * 
+             * 1. 明亮的环境光 - 减少深色阴影
+             * 2. 强烈的主光源 - 创造清晰对比
+             * 3. 温暖的色温 - 营造愉悦氛围
+             * 4. 简化的阴影 - 避免过于复杂的光影
+             */
+
+            /*
+             * 🌟 环境光 (Ambient Light)
+             * 
+             * 💡 Unity对比：
+             * Unity: Window -> Lighting -> Environment Lighting
+             * WebGL: new THREE.AmbientLight()
+             * 
+             * 📝 作用：为所有物体提供基础照明，避免纯黑阴影
+             */
+            const ambientLight = new THREE.AmbientLight(
+                0xffffff,  // 颜色：纯白色
+                0.7        // 强度：0.7 (比较明亮，符合卡通风格)
+            );
+            scene.add(ambientLight);
+            console.log('✅ 环境光设置完成 - 白色,强度0.7');
+
+            /*
+             * ☀️ 主方向光 (Main Directional Light)
+             * 
+             * 💡 Unity对比：
+             * Unity: Directional Light GameObject
+             * WebGL: new THREE.DirectionalLight()
+             * 
+             * 📝 作用：模拟太阳光，产生主要的光照和阴影
+             */
+            const mainLight = new THREE.DirectionalLight(
+                0xFFE4B5,  // 颜色：温暖的桃色 (卡通常用暖色调)
+                1.5        // 强度：1.5 (较强，产生清晰对比)
+            );
+
+            // 设置光源位置 - 模拟上午阳光角度
+            mainLight.position.set(50, 100, 50);
+
+            // 配置阴影
+            mainLight.castShadow = true;
+            mainLight.shadow.mapSize.width = 2048;   // 阴影贴图分辨率
+            mainLight.shadow.mapSize.height = 2048;
+            mainLight.shadow.camera.near = 0.5;
+            mainLight.shadow.camera.far = 500;
+            mainLight.shadow.camera.left = -100;
+            mainLight.shadow.camera.right = 100;
+            mainLight.shadow.camera.top = 100;
+            mainLight.shadow.camera.bottom = -100;
+
+            scene.add(mainLight);
+            console.log('✅ 主方向光设置完成 - 桃色,强度1.5,支持阴影');
+
+            /*
+             * 🌸 补光 (Fill Light)
+             * 
+             * 📝 卡通渲染技巧：添加柔和补光，减少过暗区域
+             * 让整个画面保持明亮愉悦的卡通风格
+             */
+            const fillLight = new THREE.DirectionalLight(
+                0xB8E6FF,  // 颜色：淡蓝色 (冷色补光，与暖色主光形成对比)
+                0.4        // 强度：0.4 (较弱，只用于补光)
+            );
+            fillLight.position.set(-30, 30, -30); // 从侧后方补光
+            scene.add(fillLight);
+            console.log('✅ 补光设置完成 - 淡蓝色,强度0.4');
+        }
+
+        /* ===================== 🌊 卡通风格水面 ===================== */
+
+        function createCartoonWater() {
+
+            /*
+             * 🎨 卡通水面设计思路：
+             * 
+             * 1. 明亮的青绿色 - 清新活泼
+             * 2. 高透明度 - 可以看到水底效果  
+             * 3. 平滑的表面 - 避免过于复杂的波纹
+             * 4. 简单的动画 - 颜色渐变或轻微波动
+             */
+
+            // 创建水面几何体
+            const waterGeometry = new THREE.PlaneGeometry(
+                200, 200,  // 尺寸：200x200单位
+                64, 64     // 分段：64x64 (为Shader动画预留足够顶点)
+            );
+
+            // 卡通水面材质
+            const waterMaterial = new THREE.MeshLambertMaterial({
+                color: 0x4ECDC4,        // 青绿色 - 卡通水的经典色彩
+                transparent: true,       // 启用透明度
+                opacity: 0.7,           // 透明度70%
+                side: THREE.DoubleSide, // 双面渲染
+
+                // 卡通风格特殊设置
+                flatShading: false,     // 平滑着色
+                reflectivity: 0.3,      // 反射率
+                shininess: 100          // 光泽度
+            });
+
+            // 创建水面网格
+            waterMesh = new THREE.Mesh(waterGeometry, waterMaterial);
+            waterMesh.rotation.x = -Math.PI / 2; // 旋转到水平
+            waterMesh.position.y = 0;            // 水面高度
+            waterMesh.receiveShadow = true;      // 接收阴影
+
+            scene.add(waterMesh);
+            console.log('✅ 卡通水面创建完成 - 青绿色,透明度70%');
+        }
+
+        /* ===================== 🎪 测试物体 ===================== */
+
+        function createTestObjects() {
+
+            // 🧊 卡通立方体
+            const cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
+            const cubeMaterial = new THREE.MeshLambertMaterial({
+                color: 0xFF6B9D  // 粉红色
+            });
+            const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+            cube.position.set(-10, 2, 0);
+            cube.castShadow = true;
+            cube.receiveShadow = true;
+            scene.add(cube);
+            testObjects.cube = cube;
+
+            // 🎾 卡通球体
+            const sphereGeometry = new THREE.SphereGeometry(3, 32, 32);
+            const sphereMaterial = new THREE.MeshLambertMaterial({
+                color: 0xFFE135  // 明黄色
+            });
+            const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+            sphere.position.set(10, 3, 0);
+            sphere.castShadow = true;
+            sphere.receiveShadow = true;
+            scene.add(sphere);
+            testObjects.sphere = sphere;
+
+            // 🔺 卡通圆锥
+            const coneGeometry = new THREE.ConeGeometry(3, 6, 8);
+            const coneMaterial = new THREE.MeshLambertMaterial({
+                color: 0x95E1D3  // 薄荷绿
+            });
+            const cone = new THREE.Mesh(coneGeometry, coneMaterial);
+            cone.position.set(0, 3, -15);
+            cone.castShadow = true;
+            cone.receiveShadow = true;
+            scene.add(cone);
+            testObjects.cone = cone;
+
+            console.log('✅ 测试物体创建完成 - 粉红立方体、黄色球体、薄荷圆锥');
+        }
+
+        /* ===================== 🎬 动画循环系统 ===================== */
+
+        function startRenderLoop() {
+            const startTime = Date.now();
+
+            function animate() {
+                requestAnimationFrame(animate);
+
+                const elapsedTime = (Date.now() - startTime) / 1000;
+
+                // 更新动画
+                updateAnimations(elapsedTime);
+
+                // 更新控制器
+                if (controls) controls.update();
+
+                // 渲染场景
+                renderer.render(scene, camera);
+            }
+
+            animate();
+            console.log('✅ 渲染循环启动 - 60FPS持续渲染');
+        }
+
+        function updateAnimations(time) {
+            // 立方体旋转动画
+            if (testObjects.cube) {
+                testObjects.cube.rotation.y = time * 0.5;
+                testObjects.cube.rotation.x = Math.sin(time) * 0.2;
+            }
+
+            // 球体浮动动画
+            if (testObjects.sphere) {
+                testObjects.sphere.position.y = 3 + Math.sin(time * 2) * 1;
+                testObjects.sphere.rotation.z = time * 0.3;
+            }
+
+            // 圆锥摇摆动画
+            if (testObjects.cone) {
+                testObjects.cone.rotation.z = Math.sin(time * 1.5) * 0.15;
+                testObjects.cone.position.y = 3 + Math.cos(time * 0.8) * 0.3;
+            }
+
+            // 水面颜色动画
+            if (waterMesh) {
+                const hue = 0.5 + Math.sin(time * 0.3) * 0.1;
+                waterMesh.material.color.setHSL(hue, 0.8, 0.6);
+            }
+        }
+
+        /* ===================== 📱 响应式处理 ===================== */
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        /* ===================== 🚀 应用启动 ===================== */
+
+        // 启动应用
+        window.addEventListener('load', async () => {
+            try {
+                updateProgress(10, '📦 加载Three.js库...');
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                updateProgress(15, '🎨 开始创建卡通世界...');
+                await initCartoonWorld();
+            } catch (error) {
+                console.error('❌ 应用启动失败:', error);
+            }
+        });
+
+        /* ===================== 🛠️ 调试工具 ===================== */
+
+        window.DEBUG = {
+            scene, camera, renderer, controls, waterMesh, testObjects,
+            info: () => console.log('调试信息:', { scene, camera, renderer }),
+            toggleWireframe: () => {
+                if (waterMesh) waterMesh.material.wireframe = !waterMesh.material.wireframe;
+            }
+        };
+
+        console.log('🛠️ 调试工具已加载 - 在控制台输入 DEBUG 查看可用命令');
+    </script>
+</body>
+
+</html>
