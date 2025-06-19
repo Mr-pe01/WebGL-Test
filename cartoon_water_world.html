@@ -344,27 +344,20 @@
         }
 
         // ========== 7. 其它功能函数（光照、水面、物体、动画、响应式等）==========
+        // 在全局声明 mainLight，便于后续访问
+        let mainLight;
+
         function setupCartoonLighting() {
-            // 取天空底部颜色作为环境光颜色
-            const skybottomColor = skyMaterial ? skyMaterial.uniforms.bottomColor.value : new THREE.Color("#ABDEF7");
-            // 取明暗滑杆的值作为环境光强度
-            const brightness = skyMaterial ? skyMaterial.uniforms.brightness.value : 1.0;
+            // 取阳光拾色器的初始颜色
+            const sunColor = document.getElementById('sunColorPicker').value || '#FFE4B5';
+            // 取明暗滑杆的初始值
+            const brightness = parseFloat(document.getElementById('brightnessSlider').value) || 1.0;
 
-            // 创建环境光，颜色和强度与天空同步
-            const ambientLight = new THREE.AmbientLight(
-                skybottomColor,   // 颜色：与天空底部颜色一致
-                brightness // 强度：基础强度乘以明暗系数
+            // 创建主方向光，颜色和强度都和UI同步
+            mainLight = new THREE.DirectionalLight(
+                sunColor,           // 颜色：用拾色器的值
+                1.5 * brightness    // 强度：基础强度乘以明暗滑杆
             );
-            scene.add(ambientLight);
-            console.log('✅ 环境光设置完成 - 颜色与天空同步, 强度与明暗滑杆同步');
-
-            // ☀️ 主方向光 (Main Directional Light)
-            // 作用：模拟太阳光，产生主要的光照和阴影
-            const mainLight = new THREE.DirectionalLight(
-                0xFFE4B5,  // 颜色：温暖的桃色 (卡通常用暖色调)
-                1.5        // 强度：1.5 (较强，产生清晰对比)
-            );
-
             // 设置光源位置 - 模拟上午阳光角度
             mainLight.position.set(50, 100, 50);
 
@@ -561,13 +554,15 @@
             if (skyMaterial) skyMaterial.uniforms.bottomColor.value.set(e.target.value);
         });
 
-        // 监听阳光（方向光）颜色
+        // 阳光颜色拾色器，实时更新 mainLight 颜色
         document.getElementById('sunColorPicker').addEventListener('input', e => {
             if (mainLight) mainLight.color.set(e.target.value);
         });
 
-        // 监听明暗滑杆
+        // 明暗滑杆，实时更新 mainLight 强度
         document.getElementById('brightnessSlider').addEventListener('input', e => {
+            if (mainLight) mainLight.intensity = 1.5 * parseFloat(e.target.value);
+            // 你也可以同步更新 shader 的 brightness uniform
             if (skyMaterial) skyMaterial.uniforms.brightness.value = parseFloat(e.target.value);
         });
     </script>
