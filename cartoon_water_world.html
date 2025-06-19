@@ -47,62 +47,22 @@
             /* 鼠标按下时显示抓取中的手型 */
         }
 
-        /* 学习面板 - 卡通风格设计 */
-        .learning-panel {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background: linear-gradient(180deg, #4e4cc9a2 0%, #e5b3e381 100%);
-            color: #2d3436;
-            padding: 25px;
-            border-radius: 20px;
-            max-width: 400px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            border: 4px solid #fd79a8;
-            z-index: 1000;
-        }
-
-        .learning-panel h2 {
-            color: #e84393;
-            margin-bottom: 15px;
-            font-size: 20px;
-        }
-
-        .concept {
-            margin: 15px 0;
-            padding: 15px;
-            background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
-            border-radius: 15px;
-            border-left: 5px solid #00b894;
-        }
-
-        .concept-title {
-            font-weight: bold;
-            color: #2d3436;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .concept-desc {
-            font-size: 12px;
-            line-height: 1.5;
-            color: #636e72;
-        }
-
-        /* 控制面板 */
+        /* =================== 控制面板（右下角说明） =================== */
+        /* 用于右下角的"鼠标控制说明"面板 */
         .controls-panel {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: linear-gradient(-90deg, #5181be8a 0%, #c295d650 100%);
-            color: rgb(21, 71, 148);
+            background: linear-gradient(-90deg, #60a4fd91 0%, #dd8fff42 100%);
+            color: rgb(23, 39, 54);
             padding: 15px;
             border-radius: 15px;
             font-size: 13px;
             border: 2px solid #1e6296;
         }
 
-        /* 进度条 */
+        /* =================== 加载进度条相关 =================== */
+        /* 进度条容器，居中显示 */
         .progress-container {
             position: fixed;
             top: 50%;
@@ -111,7 +71,7 @@
             text-align: center;
             z-index: 2000;
         }
-
+        /* 进度条上的文字 */
         .progress-text {
             color: #2d3436;
             font-size: 24px;
@@ -119,7 +79,7 @@
             margin-bottom: 20px;
             text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
         }
-
+        /* 进度条本体 */
         .progress-bar {
             width: 300px;
             height: 12px;
@@ -128,7 +88,7 @@
             overflow: hidden;
             border: 2px solid #fd79a8;
         }
-
+        /* 进度条填充部分 */
         .progress-fill {
             height: 100%;
             background: linear-gradient(90deg, #fd79a8, #fdcb6e);
@@ -139,19 +99,30 @@
 
         @media (max-width: 600px) {
             .settings-panel {
-                max-width: 95vw;      /* 手机端最大宽度为视口宽度的95% */
-                left: 2vw;            /* 左右边距用vw单位，适应不同屏幕 */
-                right: 2vw;
-                top: 10px;
-                padding: 12px;        /* 手机端内边距缩小 */
-                font-size: 15px;      /* 手机端字体略小 */
-                border-radius: 12px;  /* 手机端圆角略小 */
+                max-width: 90vw;         /* 手机端最大宽度为视口宽度的90% */
+                left: 5vw;               /* 左右边距用vw单位，适应不同屏幕 */
+                right: 5vw;
+                top: 8px;                /* 顶部距离缩小 */
+                padding: 8px 4vw;        /* 内边距缩小，左右用vw自适应 */
+                font-size: 14px;         /* 字体更小 */
+                border-radius: 10px;     /* 圆角更小 */
+                box-shadow: 0 4px 12px rgba(0,0,0,0.10); /* 阴影更轻 */
+                overflow-y: auto;        /* 内容超出时可滚动 */
+                max-height: 90vh;        /* 防止面板过高 */
             }
             .settings-panel h2 {
-                font-size: 17px;      /* 手机端标题字体略小 */
+                font-size: 15px;         /* 标题字体更小 */
+                margin-bottom: 10px;
             }
             .settings-panel label {
-                font-size: 15px;      /* 手机端label字体略小 */
+                font-size: 14px;         /* label字体更小 */
+            }
+            .settings-panel input[type=\"color\"] {
+                width: 28px; height: 28px; /* 颜色选择器更小 */
+            }
+            .settings-panel input[type=\"range\"] {
+                width: 60vw;              /* 滑杆宽度自适应 */
+                max-width: 200px;
             }
         }
     </style>
@@ -160,12 +131,14 @@
 
 <body>
     <!-- 设置面板 -->
-    <div class="settings-panel" style="position:fixed;top:20px;left:20px;background:linear-gradient(180deg,#e3eafc 0%,#f9f9f9 100%);color:#2d3436;padding:25px;border-radius:20px;max-width:350px;box-shadow:0 8px 24px rgba(0,0,0,0.08);border:2px solid #7ea6e0;z-index:1000;">
-        <h2 style="color:#2741A5;margin-bottom:18px;font-size:20px;">⚙️ 场景设置</h2>
+    <div class="settings-panel" style="position:fixed;top:20px;left:20px;background:linear-gradient(180deg,#2935a588 0%,#28679e86 100%);
+        color:#2d3436;padding:25px;border-radius:20px;max-width:350px;box-shadow:0 8px 24px rgba(0,0,0,0.08);
+        border:2px solid #7ea6e0;z-index:1000;">
+        <h2 style="color:#252e53;margin-bottom:18px;font-size:20px;">⚙️ 场景设置</h2>
         
         <!-- 天空设置分组 -->
         <div style="margin-bottom:18px;">
-            <div style="font-weight:bold;color:#2741A5;margin-bottom:8px;">🌌 天空设置</div>
+            <div style="font-weight:bold;color:#8fc4f7;margin-bottom:8px;">🌌 天空设置</div>
             <div style="margin-bottom:10px;">
                 <label>顶部颜色: 
                     <input type="color" id="topColorPicker" value="#2741A5" style="vertical-align:middle;">
@@ -337,7 +310,7 @@
                 controls.dampingFactor = 0.25;         // 阻尼系数
                 controls.minDistance = 5;              // 最近距离
                 controls.maxDistance = 100;            // 最远距离
-                controls.maxPolarAngle = Math.PI / 2.05;  // 最大仰角
+                controls.maxPolarAngle = Math.PI / 2.1;  // 最大仰角
 
                 // 🖱️ 自定义鼠标按键映射
                 controls.mouseButtons = {
