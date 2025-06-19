@@ -136,46 +136,58 @@
             transition: width 0.5s ease;
             border-radius: 4px;
         }
+
+        @media (max-width: 600px) {
+            .settings-panel {
+                max-width: 95vw;      /* 手机端最大宽度为视口宽度的95% */
+                left: 2vw;            /* 左右边距用vw单位，适应不同屏幕 */
+                right: 2vw;
+                top: 10px;
+                padding: 12px;        /* 手机端内边距缩小 */
+                font-size: 15px;      /* 手机端字体略小 */
+                border-radius: 12px;  /* 手机端圆角略小 */
+            }
+            .settings-panel h2 {
+                font-size: 17px;      /* 手机端标题字体略小 */
+            }
+            .settings-panel label {
+                font-size: 15px;      /* 手机端label字体略小 */
+            }
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 
 <body>
-    <!-- WebGL学习面板 -->
-    <div class="learning-panel">
-        <h2>🎓 WebGL vs Unity 对比学习</h2>
-
-        <div class="concept">
-            <div class="concept-title">🌍 Scene (场景)</div>
-            <div class="concept-desc">
-                Unity: Scene文件 + Hierarchy面板<br>
-                WebGL: new THREE.Scene() + scene.add()
+    <!-- 设置面板 -->
+    <div class="settings-panel" style="position:fixed;top:20px;left:20px;background:linear-gradient(180deg,#e3eafc 0%,#f9f9f9 100%);color:#2d3436;padding:25px;border-radius:20px;max-width:350px;box-shadow:0 8px 24px rgba(0,0,0,0.08);border:2px solid #7ea6e0;z-index:1000;">
+        <h2 style="color:#2741A5;margin-bottom:18px;font-size:20px;">⚙️ 场景设置</h2>
+        
+        <!-- 天空设置分组 -->
+        <div style="margin-bottom:18px;">
+            <div style="font-weight:bold;color:#2741A5;margin-bottom:8px;">🌌 天空设置</div>
+            <div style="margin-bottom:10px;">
+                <label>顶部颜色: 
+                    <input type="color" id="topColorPicker" value="#2741A5" style="vertical-align:middle;">
+                </label>
+            </div>
+            <div style="margin-bottom:10px;">
+                <label>中间颜色: 
+                    <input type="color" id="middleColorPicker" value="#3789E1" style="vertical-align:middle;">
+                </label>
+            </div>
+            <div style="margin-bottom:10px;">
+                <label>底部颜色: 
+                    <input type="color" id="bottomColorPicker" value="#ABDEF7" style="vertical-align:middle;">
+                </label>
+            </div>
+            <div style="margin-top:12px;">
+                <label>明暗调节:
+                    <input type="range" id="brightnessSlider" min="0.1" max="2" step="0.01" value="1" style="vertical-align:middle;">
+                </label>
             </div>
         </div>
-
-        <div class="concept">
-            <div class="concept-title">📷 Camera (相机)</div>
-            <div class="concept-desc">
-                Unity: Camera组件 + Inspector设置<br>
-                WebGL: new THREE.PerspectiveCamera(fov, aspect, near, far)
-            </div>
-        </div>
-
-        <div class="concept">
-            <div class="concept-title">🎭 Material (材质)</div>
-            <div class="concept-desc">
-                Unity: Material文件 + Shader<br>
-                WebGL: THREE.Material + GLSL Shader
-            </div>
-        </div>
-
-        <div class="concept">
-            <div class="concept-title">💡 Light (光照)</div>
-            <div class="concept-desc">
-                Unity: Light组件 + Lighting窗口<br>
-                WebGL: THREE.Light + renderer.shadowMap
-            </div>
-        </div>
+        <!-- 你可以在这里继续添加其它分组设置，比如水面、物体等 -->
     </div>
 
     <!-- 控制说明 -->
@@ -197,24 +209,6 @@
 
     <!-- WebGL画布 -->
     <canvas id="canvas"></canvas>
-
-    <!-- 新增的颜色拾色器和滑杆 -->
-    <div class="sky-controls-panel" style="position:fixed;top:20px;right:20px;background:rgba(183, 187, 219, 0.2);border-radius:12px;padding:18px;z-index:1200;">
-        <div>
-            <label>顶部颜色: <input type="color" id="topColorPicker" value="#87ceeb"></label>
-        </div>
-        <div>
-            <label>中间颜色: <input type="color" id="middleColorPicker" value="#ffb6c1"></label>
-        </div>
-        <div>
-            <label>底部颜色: <input type="color" id="bottomColorPicker" value="#fffacd"></label>
-        </div>
-        <div style="margin-top:10px;">
-            <label>明暗调节:
-                <input type="range" id="brightnessSlider" min="0.1" max="2" step="0.01" value="1">
-            </label>
-        </div>
-    </div>
 
     <!-- JavaScript开始 - 这里是WebGL的核心逻辑 -->
     <script>
@@ -358,20 +352,24 @@
         }
 
         // ========== 6. 天空盒创建（分文件加载shader） ==========
+        // 全局声明 skyMaterial，便于其它地方访问和修改
+        let skyMaterial;
+
         async function createCartoonSkybox() {
             const skyGeometry = new THREE.SphereGeometry(500, 32, 32);
-            // 分别加载顶点和片元shader
+            // 加载顶点和片元shader
             const vertexShader = await loadShader('shaders/sky.vert');
             const fragmentShader = await loadShader('shaders/sky.frag');
-            const skyMaterial = new THREE.ShaderMaterial({
+            // 创建 ShaderMaterial，并赋值给全局变量
+            skyMaterial = new THREE.ShaderMaterial({
                 vertexShader, fragmentShader,
                 uniforms: {
-                    topColor: { value: new THREE.Color(0.3, 0.4, 0.9) },     
-                    middleColor: { value: new THREE.Color(0.4, 0.6, 0.85) },   
-                    bottomColor: { value: new THREE.Color(0.5, 0.6, 0.7) },   
-                    offset: { value: 33 },      // 渐变偏移量（控制天空颜色分布的高度位置）
-                    exponent: { value: 0.6 },    // 渐变指数（控制天空颜色过渡的平滑度/锐利度）
-                    brightness: { value: 1.0 }    // 新增明暗uniform
+                    topColor: { value: new THREE.Color("#2741A5") },      // 天空顶部颜色
+                    middleColor: { value: new THREE.Color("#3789E1") },   // 天空中间颜色
+                    bottomColor: { value: new THREE.Color("#ABDEF7") },   // 天空底部颜色
+                    offset: { value: 33 },      // 渐变偏移量
+                    exponent: { value: 0.6 },   // 渐变指数
+                    brightness: { value: 0.7 }  // 明暗调节
                 },
                 side: THREE.BackSide
             });
@@ -382,41 +380,21 @@
 
         // ========== 7. 其它功能函数（光照、水面、物体、动画、响应式等）==========
         function setupCartoonLighting() {
+            // 取天空底部颜色作为环境光颜色
+            const skybottomColor = skyMaterial ? skyMaterial.uniforms.bottomColor.value : new THREE.Color("#ABDEF7");
+            // 取明暗滑杆的值作为环境光强度
+            const brightness = skyMaterial ? skyMaterial.uniforms.brightness.value : 1.0;
 
-            /*
-             * 🎨 卡通光照的特点：
-             * 
-             * 1. 明亮的环境光 - 减少深色阴影
-             * 2. 强烈的主光源 - 创造清晰对比
-             * 3. 温暖的色温 - 营造愉悦氛围
-             * 4. 简化的阴影 - 避免过于复杂的光影
-             */
-
-            /*
-             * 🌟 环境光 (Ambient Light)
-             * 
-             * 💡 Unity对比：
-             * Unity: Window -> Lighting -> Environment Lighting
-             * WebGL: new THREE.AmbientLight()
-             * 
-             * 📝 作用：为所有物体提供基础照明，避免纯黑阴影
-             */
+            // 创建环境光，颜色和强度与天空同步
             const ambientLight = new THREE.AmbientLight(
-                0xffffff,  // 颜色：纯白色
-                0.7        // 强度：0.7 (比较明亮，符合卡通风格)
+                skybottomColor,   // 颜色：与天空底部颜色一致
+                brightness // 强度：基础强度乘以明暗系数
             );
             scene.add(ambientLight);
-            console.log('✅ 环境光设置完成 - 白色,强度0.7');
+            console.log('✅ 环境光设置完成 - 颜色与天空同步, 强度与明暗滑杆同步');
 
-            /*
-             * ☀️ 主方向光 (Main Directional Light)
-             * 
-             * 💡 Unity对比：
-             * Unity: Directional Light GameObject
-             * WebGL: new THREE.DirectionalLight()
-             * 
-             * 📝 作用：模拟太阳光，产生主要的光照和阴影
-             */
+            // ☀️ 主方向光 (Main Directional Light)
+            // 作用：模拟太阳光，产生主要的光照和阴影
             const mainLight = new THREE.DirectionalLight(
                 0xFFE4B5,  // 颜色：温暖的桃色 (卡通常用暖色调)
                 1.5        // 强度：1.5 (较强，产生清晰对比)
@@ -606,22 +584,27 @@
 
         console.log('🛠️ 调试工具已加载 - 在控制台输入 DEBUG 查看可用命令');
 
-        // 添加事件监听，实时更新颜色和明暗
-        window.addEventListener('DOMContentLoaded', () => {
-            // 颜色拾色器
-            document.getElementById('topColorPicker').addEventListener('input', e => {
-                if (skyMaterial) skyMaterial.uniforms.topColor.value.set(e.target.value);
-            });
-            document.getElementById('middleColorPicker').addEventListener('input', e => {
-                if (skyMaterial) skyMaterial.uniforms.middleColor.value.set(e.target.value);
-            });
-            document.getElementById('bottomColorPicker').addEventListener('input', e => {
-                if (skyMaterial) skyMaterial.uniforms.bottomColor.value.set(e.target.value);
-            });
-            // 明暗滑杆
-            document.getElementById('brightnessSlider').addEventListener('input', e => {
-                if (skyMaterial) skyMaterial.uniforms.brightness.value = parseFloat(e.target.value);
-            });
+        // ===================== 颜色拾色器和明暗滑杆事件监听 =====================
+        // 监听顶部颜色拾色器的变化事件
+        // 用户在网页上选择顶部颜色时，实时更新 shader 的 topColor uniform
+        // e.target.value 是颜色字符串（如 #87ceeb）
+        document.getElementById('topColorPicker').addEventListener('input', e => {
+            if (skyMaterial) skyMaterial.uniforms.topColor.value.set(e.target.value);
+        });
+        // 监听中间颜色拾色器的变化事件
+        // 用户选择中间颜色时，实时更新 middleColor uniform
+        document.getElementById('middleColorPicker').addEventListener('input', e => {
+            if (skyMaterial) skyMaterial.uniforms.middleColor.value.set(e.target.value);
+        });
+        // 监听底部颜色拾色器的变化事件
+        // 用户选择底部颜色时，实时更新 bottomColor uniform
+        document.getElementById('bottomColorPicker').addEventListener('input', e => {
+            if (skyMaterial) skyMaterial.uniforms.bottomColor.value.set(e.target.value);
+        });
+        // 监听明暗滑杆的变化事件
+        // 用户拖动滑杆时，实时更新 brightness uniform，实现天空整体明暗调节
+        document.getElementById('brightnessSlider').addEventListener('input', e => {
+            if (skyMaterial) skyMaterial.uniforms.brightness.value = parseFloat(e.target.value);
         });
     </script>
 </body>
