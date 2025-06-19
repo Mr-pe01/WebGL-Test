@@ -148,8 +148,8 @@
         <!-- ===== 明暗滑杆设置（单独一行） ===== -->
         <div style="margin-top:12px;">
             <label>
-                <span style="font-weight:bold;color:#888;margin-right:8px;">明暗</span>
-                <input type="range" id="brightnessSlider" min="0.1" max="2" step="0.01" value="1"
+                <span style="font-weight:bold;color:#252e53;margin-right:8px;">明暗</span>
+                <input type="range" id="brightnessSlider" min="0.01" max="1" step="0.01" value="0.7"
                     style="vertical-align:middle;width:120px;">
             </label>
         </div>
@@ -334,7 +334,7 @@
                     bottomColor: { value: new THREE.Color("#ABDEF7") },   // 和 bottomColorPicker 一致
                     offset: { value: 33 },
                     exponent: { value: 0.6 },
-                    brightness: { value: 1.0 }
+                    brightness: { value: 0.7 }
                 },
                 side: THREE.BackSide
             });
