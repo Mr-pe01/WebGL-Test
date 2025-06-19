@@ -3,6 +3,7 @@ uniform vec3 middleColor;
 uniform vec3 bottomColor;
 uniform float offset;
 uniform float exponent;
+uniform float brightness;
 
 varying vec3 vWorldPosition;
 
@@ -16,5 +17,7 @@ void main() {
         color = mix(middleColor, topColor, (h - 0.5) * 2.0);
     }
     
+    color *= brightness;
+
     gl_FragColor = vec4(color, 1.0);
 } 

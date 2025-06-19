@@ -198,6 +198,24 @@
     <!-- WebGL画布 -->
     <canvas id="canvas"></canvas>
 
+    <!-- 新增的颜色拾色器和滑杆 -->
+    <div class="sky-controls-panel" style="position:fixed;top:20px;right:20px;background:rgba(183, 187, 219, 0.2);border-radius:12px;padding:18px;z-index:1200;">
+        <div>
+            <label>顶部颜色: <input type="color" id="topColorPicker" value="#87ceeb"></label>
+        </div>
+        <div>
+            <label>中间颜色: <input type="color" id="middleColorPicker" value="#ffb6c1"></label>
+        </div>
+        <div>
+            <label>底部颜色: <input type="color" id="bottomColorPicker" value="#fffacd"></label>
+        </div>
+        <div style="margin-top:10px;">
+            <label>明暗调节:
+                <input type="range" id="brightnessSlider" min="0.1" max="2" step="0.01" value="1">
+            </label>
+        </div>
+    </div>
+
     <!-- JavaScript开始 - 这里是WebGL的核心逻辑 -->
     <script>
         // ========== 1. 远程加载shader的工具函数 ==========
@@ -325,7 +343,7 @@
                 controls.dampingFactor = 0.25;         // 阻尼系数
                 controls.minDistance = 5;              // 最近距离
                 controls.maxDistance = 100;            // 最远距离
-                controls.maxPolarAngle = Math.PI / 2.1;  // 最大仰角
+                controls.maxPolarAngle = Math.PI / 2.05;  // 最大仰角
 
                 // 🖱️ 自定义鼠标按键映射
                 controls.mouseButtons = {
@@ -348,11 +366,12 @@
             const skyMaterial = new THREE.ShaderMaterial({
                 vertexShader, fragmentShader,
                 uniforms: {
-                    topColor: { value: new THREE.Color(0x87CEEB) },
-                    middleColor: { value: new THREE.Color(0xFFB6C1) },
-                    bottomColor: { value: new THREE.Color(0xFFFACD) },
-                    offset: { value: 33 },
-                    exponent: { value: 0.6 }
+                    topColor: { value: new THREE.Color(0.3, 0.4, 0.9) },     
+                    middleColor: { value: new THREE.Color(0.4, 0.6, 0.85) },   
+                    bottomColor: { value: new THREE.Color(0.5, 0.6, 0.7) },   
+                    offset: { value: 33 },      // 渐变偏移量（控制天空颜色分布的高度位置）
+                    exponent: { value: 0.6 },    // 渐变指数（控制天空颜色过渡的平滑度/锐利度）
+                    brightness: { value: 1.0 }    // 新增明暗uniform
                 },
                 side: THREE.BackSide
             });
@@ -586,6 +605,24 @@
         };
 
         console.log('🛠️ 调试工具已加载 - 在控制台输入 DEBUG 查看可用命令');
+
+        // 添加事件监听，实时更新颜色和明暗
+        window.addEventListener('DOMContentLoaded', () => {
+            // 颜色拾色器
+            document.getElementById('topColorPicker').addEventListener('input', e => {
+                if (skyMaterial) skyMaterial.uniforms.topColor.value.set(e.target.value);
+            });
+            document.getElementById('middleColorPicker').addEventListener('input', e => {
+                if (skyMaterial) skyMaterial.uniforms.middleColor.value.set(e.target.value);
+            });
+            document.getElementById('bottomColorPicker').addEventListener('input', e => {
+                if (skyMaterial) skyMaterial.uniforms.bottomColor.value.set(e.target.value);
+            });
+            // 明暗滑杆
+            document.getElementById('brightnessSlider').addEventListener('input', e => {
+                if (skyMaterial) skyMaterial.uniforms.brightness.value = parseFloat(e.target.value);
+            });
+        });
     </script>
 </body>
 
