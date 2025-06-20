@@ -71,6 +71,7 @@
             text-align: center;
             z-index: 2000;
         }
+
         /* 进度条上的文字 */
         .progress-text {
             color: #2d3436;
@@ -79,6 +80,7 @@
             margin-bottom: 20px;
             text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
         }
+
         /* 进度条本体 */
         .progress-bar {
             width: 300px;
@@ -88,6 +90,7 @@
             overflow: hidden;
             border: 2px solid #fd79a8;
         }
+
         /* 进度条填充部分 */
         .progress-fill {
             height: 100%;
@@ -104,11 +107,13 @@
                 transform-origin: top left;
                 left: 0;
                 top: 0;
-                width: 320px;      /* 和PC端一致 */
+                width: 320px;
+                /* 和PC端一致 */
                 max-width: none;
                 min-width: 0;
                 /* 其它PC端样式不用再重复 */
             }
+
             /* 不需要再单独设置字体、input宽高等 */
         }
     </style>
@@ -121,7 +126,7 @@
         color:#2d3436;padding:25px;border-radius:20px;max-width:350px;box-shadow:0 8px 24px rgba(0,0,0,0.08);
         border:2px solid #7ea6e0;z-index:1000;">
         <h2 style="color:#252e53;margin-bottom:18px;font-size:20px;">⚙️ 场景设置</h2>
-        
+
         <!-- ===== 天空颜色分组（fieldset包围，两个拾色器并排） ===== -->
         <fieldset style="border:1.5px solid #8fc4f7;border-radius:8px;padding:10px 12px 8px 12px;margin-bottom:18px;">
             <legend style="font-weight:bold;color:#8fc4f7;padding:0 8px;">🌌 天空</legend>
@@ -136,16 +141,59 @@
             </div>
         </fieldset>
 
-        <!-- ===== 阳光颜色设置（单独一行） ===== -->
-        <div style="margin-bottom:10px;">
+        <!-- ===== 阳光颜色设置（分组） ===== -->
+        <fieldset style="border:1.5px solid #f7c873;border-radius:8px;padding:10px 12px 8px 12px;margin-bottom:18px;">
+            <legend style="font-weight:bold;color:#f7c873;padding:0 8px;">☀️ 阳光</legend>
+            <input type="color" id="sunColorPicker" value="#FFE4B5"
+                style="vertical-align:middle;width:36px;height:36px;border:none;background:none;cursor:pointer;">
+        </fieldset>
+
+        <!-- ========== ☀️ 阳光方向控制 ========== -->
+        <!-- 说明：通过两个角度滑块实时调整主光（DirectionalLight）方向 -->
+        <div style="margin-top:10px;">
             <label>
-                <span style="font-weight:bold;color:#f7c873;margin-right:8px;">☀️ 阳光</span>
-                <input type="color" id="sunColorPicker" value="#FFE4B5"
-                    style="vertical-align:middle;width:36px;height:36px;border:none;background:none;cursor:pointer;">
+                <span style="font-weight:bold;color:#f7c873;margin-right:8px;">阳光X轴角度</span>
+                <input type="range" id="sunDirXSlider" min="-90" max="90" step="1" value="45" style="vertical-align:middle;width:120px;">
+                <span id="sunDirXValue">45</span>°
+            </label>
+        </div>
+        <div style="margin-top:6px;">
+            <label>
+                <span style="font-weight:bold;color:#f7c873;margin-right:8px;">阳光Z轴角度</span>
+                <input type="range" id="sunDirZSlider" min="-180" max="180" step="1" value="45" style="vertical-align:middle;width:120px;">
+                <span id="sunDirZValue">45</span>°
             </label>
         </div>
 
-        <!-- ===== 明暗滑杆设置（单独一行） ===== -->
+        <!-- ===== 水面法线贴图参数分组 ===== -->
+        <fieldset style="border:1.5px solid #4ecdc4;border-radius:8px;padding:10px 12px 8px 12px;margin-bottom:18px;">
+            <legend style="font-weight:bold;color:#4ecdc4;padding:0 8px;">🌊 水面法线</legend>
+            <div style="margin-bottom:10px;">
+                <label>
+                    <span style="font-weight:bold;color:#2d3436;margin-right:8px;">纹理缩放</span>
+                    <input type="range" id="waterRepeatSlider" min="1" max="8" step="0.1" value="3"
+                        style="vertical-align:middle;width:120px;">
+                </label>
+            </div>
+            <div>
+                <label>
+                    <span style="font-weight:bold;color:#2d3436;margin-right:8px;">速度</span>
+                    <input type="range" id="waterSpeedSlider" min="0.01" max="0.2" step="0.01" value="0.06"
+                        style="vertical-align:middle;width:120px;">
+                </label>
+            </div>
+        </fieldset>
+
+        <!-- ===== 阴影滑杆设置 单独一行）===== -->
+        <div style="margin-top:12px;">
+            <label>
+                <span style="font-weight:bold;color:#252e53;margin-right:8px;">阴影</span>
+                <input type="range" id="shadowSlider" min="0" max="1" step="0.01" value="0.6"
+                    style="vertical-align:middle;width:120px;">
+            </label>
+        </div>
+
+        <!-- ===== 明暗滑杆设置（单独一行）===== -->
         <div style="margin-top:12px;">
             <label>
                 <span style="font-weight:bold;color:#252e53;margin-right:8px;">明暗</span>
@@ -153,6 +201,31 @@
                     style="vertical-align:middle;width:120px;">
             </label>
         </div>
+
+        <!-- 高光阈值控制滑块 -->
+        <label for="waterSpecularThresholdSlider">高光阈值</label>
+        <input id="waterSpecularThresholdSlider" type="range" min="0.8" max="1.0" step="0.001" value="0.985">
+        <span id="waterSpecularThresholdValue">0.985</span>
+        <br>
+
+        <!-- 高光强度控制滑块 -->
+        <label for="waterSpecularStrengthSlider">高光强度</label>
+        <input id="waterSpecularStrengthSlider" type="range" min="0.0" max="1.0" step="0.01" value="0.18">
+        <span id="waterSpecularStrengthValue">0.18</span>
+        <br>
+
+        <!-- 菲尼尔Power控制滑块 -->
+        <label for="waterFresnelPowerSlider">菲尼尔Power</label>
+        <input id="waterFresnelPowerSlider" type="range" min="1.0" max="5.0" step="0.01" value="3.0">
+        <span id="waterFresnelPowerValue">3.0</span>
+        <br>
+
+        <!-- 菲尼尔强度控制滑块 -->
+        <label for="waterFresnelStrengthSlider">菲尼尔强度</label>
+        <input id="waterFresnelStrengthSlider" type="range" min="0.0" max="1.0" step="0.01" value="0.18">
+        <span id="waterFresnelStrengthValue">0.18</span>
+        <br>
+
     </div>
 
     <!-- 控制说明 -->
@@ -182,7 +255,9 @@
         async function loadShader(url) {
             const response = await fetch(url);
             if (!response.ok) throw new Error('无法加载shader: ' + url);
-            return await response.text();
+            const text = await response.text();
+            if (!text) throw new Error('shader内容为空: ' + url);
+            return text;
         }
 
         // ========== 2. WebGL主流程相关全局变量 ==========
@@ -283,11 +358,7 @@
 
             console.log('✅ WebGL渲染器创建成功 - 支持阴影、抗锯齿、色调映射');
 
-            /*
-             * 🎯 第四步：设置交互控制 (Orbit Controls)
-             * Unity: 需要自己写Camera Controller脚本处理Input
-             * WebGL: Three.js提供现成的OrbitControls
-             */
+            // 🎯 第四步：设置交互控制 (Orbit Controls)
             // 注意：OrbitControls需要从CDN加载，这里先创建占位函数
             setupOrbitControls();
         }
@@ -346,72 +417,98 @@
         // ========== 7. 其它功能函数（光照、水面、物体、动画、响应式等）==========
         // 在全局声明 mainLight，便于后续访问
         let mainLight;
+        // 全局存储halfLambert材质，便于动态更新uniform
+        let halfLambertMaterials = [];
+
+        // ========== 🌟 全局明暗变量 ========== 
+        // 用于统一管理明暗滑杆的值，方便全局访问和同步
+        let globalBrightness = 0.7; // 初始值与滑杆一致
+
+        // ========== 🌑 全局阴影变量 ========== 
+        // 用于统一管理阴影滑杆的值，方便全局访问和同步
+        let globalShadow = 0.6; // 初始值与阴影滑杆一致
 
         function setupCartoonLighting() {
             // 取阳光拾色器的初始颜色
             const sunColor = document.getElementById('sunColorPicker').value || '#FFE4B5';
-            // 取明暗滑杆的初始值
-            const brightness = parseFloat(document.getElementById('brightnessSlider').value) || 1.0;
+            // 取明暗滑杆的初始值，赋值给全局变量
+            globalBrightness = parseFloat(document.getElementById('brightnessSlider').value) || 0.7;
 
             // 创建主方向光，颜色和强度都和UI同步
             mainLight = new THREE.DirectionalLight(
                 sunColor,           // 颜色：用拾色器的值
-                1.7 * brightness    // 强度：基础强度乘以明暗滑杆
+                globalBrightness    // 强度：明暗滑杆
             );
             // 设置光源位置 - 模拟上午阳光角度
-            mainLight.position.set(50, 100, 50);
+            mainLight.position.set(50, 0, 50);
 
             // 配置阴影
-            mainLight.castShadow = true;
-            mainLight.shadow.mapSize.width = 2048;   // 阴影贴图分辨率
-            mainLight.shadow.mapSize.height = 2048;
-            mainLight.shadow.camera.near = 0.5;
-            mainLight.shadow.camera.far = 500;
-            mainLight.shadow.camera.left = -100;
-            mainLight.shadow.camera.right = 100;
-            mainLight.shadow.camera.top = 100;
-            mainLight.shadow.camera.bottom = -100;
+            mainLight.castShadow = true; // 启用阴影投射
+            // 阴影贴图分辨率（默认512x512，适中性能和效果）
+            mainLight.shadow.mapSize.width = 4096;   // 阴影贴图宽度
+            mainLight.shadow.mapSize.height = 4096;  // 阴影贴图高度
+            // 阴影相机近平面（默认0.5，决定阴影起始距离）
+            mainLight.shadow.camera.near = 0.5;     // 阴影相机近平面
+            // 阴影相机远平面（默认500，决定阴影最大距离）
+            mainLight.shadow.camera.far = 500;      // 阴影相机远平面
+            // 阴影相机视锥体范围（默认-100~100，决定阴影覆盖区域）
+            mainLight.shadow.camera.left = -100;    // 左边界
+            mainLight.shadow.camera.right = 100;    // 右边界
+            mainLight.shadow.camera.top = 100;      // 上边界
+            mainLight.shadow.camera.bottom = -100;  // 下边界
+            // 阴影偏移（默认0，防止阴影伪影/漂浮，可微调）
+            mainLight.shadow.bias = 0;              // 深度偏移
+            mainLight.shadow.normalBias = -0.04;        // 法线偏移
 
             scene.add(mainLight);
             console.log('✅ 主方向光设置完成 - 桃色,强度1.5,支持阴影');
-
-            /*
-             * 🌸 补光 (Fill Light)
-             * 
-             * 📝 卡通渲染技巧：添加柔和补光，减少过暗区域
-             * 让整个画面保持明亮愉悦的卡通风格
-             */
-            const fillLight = new THREE.DirectionalLight(
-                0xB8E6FF,  // 颜色：淡蓝色 (冷色补光，与暖色主光形成对比)
-                0.4        // 强度：0.4 (较弱，只用于补光)
-            );
-            fillLight.position.set(-30, 30, -30); // 从侧后方补光
-            scene.add(fillLight);
-            console.log('✅ 补光设置完成 - 淡蓝色,强度0.4');
         }
 
-        function createCartoonWater() {
-
-            /*
-             * 🎨 卡通水面设计思路：
-             * 
-             * 1. 明亮的青绿色 - 清新活泼
-             * 2. 高透明度 - 可以看到水底效果  
-             * 3. 平滑的表面 - 避免过于复杂的波纹
-             * 4. 简单的动画 - 颜色渐变或轻微波动
-             */
-
+        // 创建卡通水面，使用自定义Shader（主光+环境光+高光+菲涅尔）
+        async function createCartoonWater() {
             // 创建水面几何体
             const waterGeometry = new THREE.PlaneGeometry(
                 200, 200,  // 尺寸：200x200单位
                 64, 64     // 分段：64x64 (为Shader动画预留足够顶点)
             );
 
-            // 卡通水面材质
-            const waterMaterial = new THREE.MeshLambertMaterial({
-                color: 0x4ECDC4,
-                transparent: true,
-                opacity: 0.7,
+            // 加载自定义水面shader
+            const waterVertex = await loadShader('shaders/cartoonWater.vert');
+            const waterFragment = await loadShader('shaders/cartoonWater.frag');
+
+            // 获取主光方向、主光颜色、环境光颜色
+            const lightDir = mainLight ? mainLight.position.clone().normalize() : new THREE.Vector3(1, 2, 1).normalize();
+            const lightColor = mainLight ? mainLight.color.clone() : new THREE.Color(document.getElementById('sunColorPicker').value);
+            const ambientColor = new THREE.Color(document.getElementById('bottomColorPicker').value);
+            // 水面基础色（可自定义，也可用UI联动）
+            const baseColor = new THREE.Color(0x4ECDC4);
+
+            // 加载法线贴图
+            const normalMap = new THREE.TextureLoader().load('textures/waterNormal.png');
+            normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping;
+
+            // 创建ShaderMaterial
+            const waterMaterial = new THREE.ShaderMaterial({
+                uniforms: {
+                    lightDirection: { value: lightDir.clone() },
+                    lightColor: { value: lightColor.clone() },
+                    ambientColor: { value: ambientColor.clone() },
+                    baseColor: { value: baseColor.clone() },
+                    brightness: { value: globalBrightness },
+                    shadow: { value: globalShadow },
+                    cameraPosition: { value: camera.position.clone() },
+                    normalMap: { value: normalMap },
+                    time: { value: 0.0 },
+                    repeat: { value: 3.0 },
+                    speed: { value: 0.06 },
+                    specularThreshold: { value: 0.985 },
+                    specularStrength: { value: 0.18 },
+                    fresnelPower: { value: 3.0 },
+                    fresnelStrength: { value: 0.18 }
+                },
+                vertexShader: waterVertex,
+                fragmentShader: waterFragment,
+                transparent: false,
                 side: THREE.DoubleSide
             });
 
@@ -422,18 +519,46 @@
             waterMesh.receiveShadow = true;      // 接收阴影
 
             scene.add(waterMesh);
-            console.log('✅ 卡通水面创建完成 - 青绿色,透明度70%');
+            console.log('✅ 卡通水面创建完成 - 自定义shader');
         }
 
-        function createTestObjects() {
+        // 使用Half-Lambert Shader创建卡通物体
+        async function createTestObjects() {
+            // 加载Half-Lambert shader代码
+            const halfLambertVertex = await loadShader('shaders/halfLambert.vert');
+            const halfLambertFragment = await loadShader('shaders/halfLambert.frag');
+            console.log('VERT:', halfLambertVertex);
+            console.log('FRAG:', halfLambertFragment);
+
+            // 获取主光方向和主光颜色（世界空间）
+            const lightDir = mainLight ? mainLight.position.clone().normalize() : new THREE.Vector3(1, 2, 1).normalize();
+            const lightColor = mainLight ? mainLight.color.clone() : new THREE.Color(document.getElementById('sunColorPicker').value);
+            // 环境光颜色取自bottomColorPicker当前值
+            const ambientColor = new THREE.Color(document.getElementById('bottomColorPicker').value);
+
+            // 工具函数：创建Half-Lambert材质（主光+环境光）
+            function createHalfLambertMaterial(color) {
+                const mat = new THREE.ShaderMaterial({
+                    uniforms: {
+                        lightDirection: { value: lightDir.clone() },
+                        lightColor: { value: lightColor.clone() },
+                        ambientColor: { value: ambientColor.clone() },
+                        baseColor: { value: new THREE.Color(color) },
+                        brightness: { value: globalBrightness },
+                        shadow: { value: globalShadow },
+                    },
+                    vertexShader: halfLambertVertex,
+                    fragmentShader: halfLambertFragment
+                });
+                halfLambertMaterials.push(mat);
+                return mat;
+            }
 
             // 🧊 卡通立方体
             const cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
-            const cubeMaterial = new THREE.MeshLambertMaterial({
-                color: 0xFF6B9D  // 粉红色
-            });
+            const cubeMaterial = createHalfLambertMaterial(0xFF6B9D); // 粉红色
             const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-            cube.position.set(-10, 2, 0);
+            cube.position.set(-10, 0, 0);
             cube.castShadow = true;
             cube.receiveShadow = true;
             scene.add(cube);
@@ -441,11 +566,9 @@
 
             // 🎾 卡通球体
             const sphereGeometry = new THREE.SphereGeometry(3, 32, 32);
-            const sphereMaterial = new THREE.MeshLambertMaterial({
-                color: 0xFFE135  // 明黄色
-            });
+            const sphereMaterial = createHalfLambertMaterial(0xFFE135); // 明黄色
             const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-            sphere.position.set(10, 3, 0);
+            sphere.position.set(10, 0, 0);
             sphere.castShadow = true;
             sphere.receiveShadow = true;
             scene.add(sphere);
@@ -453,17 +576,15 @@
 
             // 🔺 卡通圆锥
             const coneGeometry = new THREE.ConeGeometry(3, 6, 8);
-            const coneMaterial = new THREE.MeshLambertMaterial({
-                color: 0x95E1D3  // 薄荷绿
-            });
+            const coneMaterial = createHalfLambertMaterial(0x95E1D3); // 薄荷绿
             const cone = new THREE.Mesh(coneGeometry, coneMaterial);
-            cone.position.set(0, 3, -15);
+            cone.position.set(0, 0, -15);
             cone.castShadow = true;
             cone.receiveShadow = true;
             scene.add(cone);
             testObjects.cone = cone;
 
-            console.log('✅ 测试物体创建完成 - 粉红立方体、黄色球体、薄荷圆锥');
+            console.log('✅ 测试物体创建完成 - Half-Lambert shader');
         }
 
         function startRenderLoop() {
@@ -491,27 +612,22 @@
         function updateAnimations(time) {
             // 立方体旋转动画
             if (testObjects.cube) {
-                testObjects.cube.rotation.y = time * 0.5;
+                testObjects.cube.rotation.y = time * 0.2;
                 testObjects.cube.rotation.x = Math.sin(time) * 0.2;
             }
 
             // 球体浮动动画
             if (testObjects.sphere) {
-                testObjects.sphere.position.y = 3 + Math.sin(time * 2) * 1;
+                testObjects.sphere.position.y = Math.sin(time * 2) * 0.4 + 0.2;
                 testObjects.sphere.rotation.z = time * 0.3;
             }
 
             // 圆锥摇摆动画
             if (testObjects.cone) {
                 testObjects.cone.rotation.z = Math.sin(time * 1.5) * 0.15;
-                testObjects.cone.position.y = 3 + Math.cos(time * 0.8) * 0.3;
+                testObjects.cone.position.y = Math.cos(time * 0.8) * 0.3 + 1;
             }
 
-            // 水面颜色动画
-            if (waterMesh) {
-                const hue = 0.5 + Math.sin(time * 0.3) * 0.1;
-                waterMesh.material.color.setHSL(hue, 0.8, 0.6);
-            }
         }
 
         /* ===================== 📱 响应式处理 ===================== */
@@ -544,27 +660,198 @@
 
         // ===================== 颜色和明暗调节事件监听 =====================
 
-        // 监听天空中间颜色
+        // 监听天空底部颜色，实时更新环境光颜色
+        document.getElementById('bottomColorPicker').addEventListener('input', e => {
+            if (skyMaterial) skyMaterial.uniforms.bottomColor.value.set(e.target.value);
+            // 同步所有halfLambert材质的环境光颜色
+            const ambColor = new THREE.Color(e.target.value);
+            halfLambertMaterials.forEach(mat => {
+                if (mat.uniforms.ambientColor) mat.uniforms.ambientColor.value.copy(ambColor);
+            });
+            updateWaterUniforms();
+        });
+
+        // 阳光颜色拾色器，实时更新 mainLight 颜色和所有halfLambert材质的主光颜色
+        document.getElementById('sunColorPicker').addEventListener('input', e => {
+            if (mainLight) mainLight.color.set(e.target.value);
+            // 同步所有halfLambert材质的主光颜色
+            const sunColor = new THREE.Color(e.target.value);
+            halfLambertMaterials.forEach(mat => {
+                if (mat.uniforms.lightColor) mat.uniforms.lightColor.value.copy(sunColor);
+            });
+            updateWaterUniforms();
+        });
+
+        // 明暗滑杆，实时更新 mainLight 强度和所有halfLambert材质明暗
+        document.getElementById('brightnessSlider').addEventListener('input', e => {
+            globalBrightness = parseFloat(e.target.value);
+            if (mainLight) mainLight.intensity = 1.5 * globalBrightness;
+            if (skyMaterial) skyMaterial.uniforms.brightness.value = globalBrightness;
+            halfLambertMaterials.forEach(mat => {
+                if (mat.uniforms.brightness) mat.uniforms.brightness.value = globalBrightness;
+            });
+            updateWaterUniforms();
+        });
+
+        // 阴影滑杆，实时更新所有halfLambert材质的暗部uniform
+        document.getElementById('shadowSlider').addEventListener('input', e => {
+            globalShadow = parseFloat(e.target.value);
+            halfLambertMaterials.forEach(mat => {
+                if (mat.uniforms.shadow) mat.uniforms.shadow.value = globalShadow;
+            });
+            updateWaterUniforms();
+        });
+
+        // 监听天空中间颜色，实时更新天空球的中间色
         document.getElementById('middleColorPicker').addEventListener('input', e => {
             if (skyMaterial) skyMaterial.uniforms.middleColor.value.set(e.target.value);
         });
 
-        // 监听天空底部颜色
-        document.getElementById('bottomColorPicker').addEventListener('input', e => {
-            if (skyMaterial) skyMaterial.uniforms.bottomColor.value.set(e.target.value);
+        // 水面shader联动：主光、环境光、明暗、阴影、相机参数
+        function updateWaterUniforms() {
+            if (!waterMesh || !waterMesh.material || !waterMesh.material.uniforms) return;
+            // 主光
+            if (mainLight && waterMesh.material.uniforms.lightDirection)
+                waterMesh.material.uniforms.lightDirection.value.copy(mainLight.position.clone().normalize());
+            if (mainLight && waterMesh.material.uniforms.lightColor)
+                waterMesh.material.uniforms.lightColor.value.copy(mainLight.color);
+            // 环境光
+            if (waterMesh.material.uniforms.ambientColor)
+                waterMesh.material.uniforms.ambientColor.value.set(document.getElementById('bottomColorPicker').value);
+            // 明暗
+            if (waterMesh.material.uniforms.brightness)
+                waterMesh.material.uniforms.brightness.value = globalBrightness;
+            // 阴影
+            if (waterMesh.material.uniforms.shadow)
+                waterMesh.material.uniforms.shadow.value = globalShadow;
+            // 相机位置
+            if (waterMesh.material.uniforms.cameraPosition)
+                waterMesh.material.uniforms.cameraPosition.value.copy(camera.position);
+
+            // 同步所有halfLambert材质的主光方向和主光颜色
+            if (mainLight) {
+                const dir = mainLight.position.clone().normalize();
+                const color = mainLight.color;
+                halfLambertMaterials.forEach(mat => {
+                    if (mat.uniforms.lightDirection) mat.uniforms.lightDirection.value.copy(dir);
+                    if (mat.uniforms.lightColor) mat.uniforms.lightColor.value.copy(color);
+                    if (mat.uniforms.ambientColor) mat.uniforms.ambientColor.value.set(document.getElementById('bottomColorPicker').value);
+                    if (mat.uniforms.brightness) mat.uniforms.brightness.value = globalBrightness;
+                    if (mat.uniforms.shadow) mat.uniforms.shadow.value = globalShadow;
+                });
+            }
+        }
+
+        // 每帧更新水面shader的相机位置（保证菲涅尔/反射正确）
+        function updateWaterCameraUniform() {
+            if (waterMesh && waterMesh.material && waterMesh.material.uniforms && waterMesh.material.uniforms.cameraPosition) {
+                waterMesh.material.uniforms.cameraPosition.value.copy(camera.position);
+            }
+        }
+
+        // 在渲染循环里调用
+        const oldRenderLoop = startRenderLoop;
+        startRenderLoop = function () {
+            const startTime = Date.now();
+            function animate() {
+                requestAnimationFrame(animate);
+                const elapsedTime = (Date.now() - startTime) / 1000;
+                updateAnimations(elapsedTime);
+                if (controls) controls.update();
+                updateWaterCameraUniform(); // 保证水面菲涅尔/反射实时
+                if (waterMesh && waterMesh.material && waterMesh.material.uniforms.time) {
+                    waterMesh.material.uniforms.time.value = performance.now() * 0.001;
+                }
+                renderer.render(scene, camera);
+            }
+            animate();
+            console.log('✅ 渲染循环启动 - 60FPS持续渲染');
+        }
+
+        // 监听纹理缩放滑杆，实时同步 repeat
+        document.getElementById('waterRepeatSlider').addEventListener('input', e => {
+            if (waterMesh && waterMesh.material && waterMesh.material.uniforms.repeat)
+                waterMesh.material.uniforms.repeat.value = parseFloat(e.target.value);
         });
 
-        // 阳光颜色拾色器，实时更新 mainLight 颜色
-        document.getElementById('sunColorPicker').addEventListener('input', e => {
-            if (mainLight) mainLight.color.set(e.target.value);
+        // 监听速度滑杆，实时同步 speed
+        document.getElementById('waterSpeedSlider').addEventListener('input', e => {
+            if (waterMesh && waterMesh.material && waterMesh.material.uniforms.speed)
+                waterMesh.material.uniforms.speed.value = parseFloat(e.target.value);
         });
 
-        // 明暗滑杆，实时更新 mainLight 强度
-        document.getElementById('brightnessSlider').addEventListener('input', e => {
-            if (mainLight) mainLight.intensity = 1.5 * parseFloat(e.target.value);
-            // 你也可以同步更新 shader 的 brightness uniform
-            if (skyMaterial) skyMaterial.uniforms.brightness.value = parseFloat(e.target.value);
+        // 等待DOM加载完成后再添加事件监听，避免找不到元素
+        window.addEventListener('DOMContentLoaded', function() {
+            // 高光阈值滑块
+            document.getElementById('waterSpecularThresholdSlider').addEventListener('input', e => {
+                // 实时显示当前值
+                document.getElementById('waterSpecularThresholdValue').textContent = e.target.value;
+                // 更新水面材质的高光阈值
+                if (waterMesh && waterMesh.material && waterMesh.material.uniforms.specularThreshold)
+                    waterMesh.material.uniforms.specularThreshold.value = parseFloat(e.target.value);
+            });
+
+            // 高光强度滑块
+            document.getElementById('waterSpecularStrengthSlider').addEventListener('input', e => {
+                document.getElementById('waterSpecularStrengthValue').textContent = e.target.value;
+                if (waterMesh && waterMesh.material && waterMesh.material.uniforms.specularStrength)
+                    waterMesh.material.uniforms.specularStrength.value = parseFloat(e.target.value);
+            });
+
+            // 菲尼尔Power滑块
+            document.getElementById('waterFresnelPowerSlider').addEventListener('input', e => {
+                document.getElementById('waterFresnelPowerValue').textContent = e.target.value;
+                if (waterMesh && waterMesh.material && waterMesh.material.uniforms.fresnelPower)
+                    waterMesh.material.uniforms.fresnelPower.value = parseFloat(e.target.value);
+            });
+
+            // 菲尼尔强度滑块
+            document.getElementById('waterFresnelStrengthSlider').addEventListener('input', e => {
+                document.getElementById('waterFresnelStrengthValue').textContent = e.target.value;
+                if (waterMesh && waterMesh.material && waterMesh.material.uniforms.fresnelStrength)
+                    waterMesh.material.uniforms.fresnelStrength.value = parseFloat(e.target.value);
+            });
+
+            // ===================== ☀️ 阳光方向滑块事件监听 =====================
+            // 说明：通过两个角度滑块实时调整主光（DirectionalLight）方向
+            // 获取X轴和Z轴角度滑块及显示值
+            const sunDirXSlider = document.getElementById('sunDirXSlider');
+            const sunDirZSlider = document.getElementById('sunDirZSlider');
+            const sunDirXValue = document.getElementById('sunDirXValue');
+            const sunDirZValue = document.getElementById('sunDirZValue');
+
+            // 工具函数：根据X、Z角度设置主光方向
+            function updateMainLightDirection() {
+                // 读取滑块角度值（单位：度）
+                const xDeg = parseFloat(sunDirXSlider.value);
+                const zDeg = parseFloat(sunDirZSlider.value);
+                // 显示当前角度
+                sunDirXValue.textContent = xDeg;
+                sunDirZValue.textContent = zDeg;
+                // 转为弧度
+                const xRad = xDeg * Math.PI / 180;
+                const zRad = zDeg * Math.PI / 180;
+                // 计算方向向量（Y轴始终向下，X和Z由角度控制）
+                // 半球坐标系，r=1
+                const r = 1;
+                const y = Math.sin(xRad); // X轴角度控制仰俯
+                const x = Math.cos(xRad) * Math.sin(zRad); // Z轴角度控制方位
+                const z = Math.cos(xRad) * Math.cos(zRad);
+                // 设置主光位置（方向）
+                if (mainLight) {
+                    mainLight.position.set(x * 50, y * 50, z * 50);
+                    updateWaterUniforms(); // 只调用一次统一同步
+                }
+            }
+
+            // 监听滑块变化
+            sunDirXSlider.addEventListener('input', updateMainLightDirection);
+            sunDirZSlider.addEventListener('input', updateMainLightDirection);
+
+            // 初始化一次
+            updateMainLightDirection();
         });
+
     </script>
 </body>
 
