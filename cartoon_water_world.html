@@ -514,12 +514,12 @@
 
             // 创建水面网格
             waterMesh = new THREE.Mesh(waterGeometry, waterMaterial);
-            waterMesh.rotation.x = -Math.PI / 2; // 旋转到水平
+            waterMesh.rotation.x = -Math.PI / 2; //  旋转到水平
             waterMesh.position.y = 0;            // 水面高度
             waterMesh.receiveShadow = true;      // 接收阴影
 
             scene.add(waterMesh);
-            console.log('✅ 卡通水面创建完成 - 自定义shader');
+            console.log('✅ 卡通水面创建完成 - 自定义shader'); 
         }
 
         // 使用Half-Lambert Shader创建卡通物体
