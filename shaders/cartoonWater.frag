@@ -14,6 +14,7 @@ uniform float specularThreshold;
 uniform float specularStrength;
 uniform float fresnelPower;
 uniform float fresnelStrength;
+uniform float waterNormalStrength;
 
 varying vec3 vWorldNormal;
 varying vec3 vWorldPosition;
@@ -21,16 +22,25 @@ varying vec2 vUv;
 varying vec3 vTangent;
 varying vec3 vBitangent;
 
+vec3 blendNormal(vec3 n1, vec3 n2) {
+    // n1, n2 都是 [-1,1] 空间的法线
+    vec3 t;
+    t.xy = n1.xy + n2.xy;
+    t.z = n1.z * n2.z;
+    return normalize(t);
+}
+
 void main() {
     // 法线扰动：双重流动
-    vec3 n1 = texture2D(normalMap, vUv * repeat + vec2(time * speed, 0.0)).xyz * 2.0 - 1.0;
+    vec3 n1 = texture2D(normalMap, vUv * 0.85 * repeat + vec2(time * speed, 0.0)).xyz * 2.0 - 1.0; // 0.85使两个UV 的大小不一样
     vec3 n2 = texture2D(normalMap, vUv * repeat - vec2(time * speed * 0.6, 0.2)).xyz * 2.0 - 1.0;
-    vec3 disturbedNormalTangent = normalize(mix(n1, n2, 0.5));
+    vec3 disturbedNormalTangent = blendNormal(n1, n2);
+    disturbedNormalTangent.xy *= waterNormalStrength;
     // 用TBN变换到世界空间
     mat3 tbn = mat3(normalize(vTangent), normalize(vBitangent), normalize(vWorldNormal));
     vec3 disturbedNormalWorld = normalize(tbn * disturbedNormalTangent);
-    // 叠加世界空间法线
-    vec3 N = normalize(disturbedNormalWorld + vWorldNormal);
+    // 最终法线
+    vec3 N = disturbedNormalWorld;
 
     // 视线方向（世界空间）
     vec3 V = normalize(cameraPosition - vWorldPosition);
@@ -45,10 +55,13 @@ void main() {
     // 主光和环境光插值混合
     vec3 cartoonDiffuse = (mainDiffuse * halfLambert + ambient * (1.0 - halfLambert)) * brightness;
 
-    // 卡通高光（Blinn-Phong+分段，区域更窄，强度更低）
     vec3 H = normalize(normalize(lightDirection) + V);
     float NdotH = max(dot(N, H), 0.0);
-    float cartoonSpec = smoothstep(specularThreshold, specularThreshold + 0.02, NdotH);
+    
+    float sharpness = exp2(10.0 * (1.0 - specularThreshold) + 1.0); // 方向与Unity一致
+    float cartoonSpec = pow(NdotH, sharpness);
+    cartoonSpec = clamp(cartoonSpec, 0.0, 1.0);
+    
     vec3 specularColor = lightColor * cartoonSpec * specularStrength; // 更弱的高光
 
     // 菲涅尔（边缘泛蓝/白，更自然）

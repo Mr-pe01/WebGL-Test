@@ -261,29 +261,36 @@
             <!-- 高光和菲尼尔参数合并到水面分组 -->
             <div style="margin-top:10px;">
                 <label>
-                    <span style="font-weight:bold;color:#4ecdc4;margin-right:8px;">高光阈值</span><input
-                        id="waterSpecularThresholdSlider" type="range" min="0.8" max="1.0" step="0.001"
-                        value="0.985"><span id="waterSpecularThresholdValue">0.985</span>
+                    <span style="font-weight:bold;color:#4ecdc4;margin-right:8px;">高光范围</span><input
+                        id="waterSpecularThresholdSlider" type="range" min="0" max="1.0" step="0.01"
+                        value="0.1"><span id="waterSpecularThresholdValue">0.1</span>
                 </label>
             </div>
             <div>
                 <label>
                     <span style="font-weight:bold;color:#4ecdc4;margin-right:8px;">高光强度</span><input
-                        id="waterSpecularStrengthSlider" type="range" min="0.0" max="1.0" step="0.01" value="0.18"><span
-                        id="waterSpecularStrengthValue">0.18</span>
+                        id="waterSpecularStrengthSlider" type="range" min="0.0" max="1.0" step="0.01" value="0.5"><span
+                        id="waterSpecularStrengthValue">0.5</span>
                 </label>
             </div>
             <div>
                 <label>
                     <span style="font-weight:bold;color:#4ecdc4;margin-right:8px;">菲尼尔范围</span><input
                         id="waterFresnelPowerSlider" type="range" min="1.0" max="5.0" step="0.01" value="3.0"><span
-                        id="waterFresnelPowerValue">3.0</span></label>
+                        id="waterFresnelPowerValue">2.5</span></label>
             </div>
             <div>
                 <label>
                     <span style="font-weight:bold;color:#4ecdc4;margin-right:8px;">菲尼尔强度</span><input
                         id="waterFresnelStrengthSlider" type="range" min="0.0" max="1.0" step="0.01" value="0.18"><span
-                        id="waterFresnelStrengthValue">0.18</span></label>
+                        id="waterFresnelStrengthValue">0.4</span></label>
+            </div>
+            <div style="margin-bottom:10px;">
+                <label>
+                    <span style="font-weight:bold;color:#4ecdc4;margin-right:8px;">纹理强度</span>
+                    <input type="range" id="waterNormalStrengthSlider" min="0" max="2" step="0.01" value="0.2" style="vertical-align:middle;width:120px;">
+                    <span id="waterNormalStrengthValue">0.20</span>
+                </label>
             </div>
         </fieldset>
 
@@ -498,10 +505,11 @@
                     time: { value: 0.0 },
                     repeat: { value: parseFloat(document.getElementById('waterRepeatSlider').value) },
                     speed: { value: parseFloat(document.getElementById('waterSpeedSlider').value) },
-                    specularThreshold: { value: 0.985 },
-                    specularStrength: { value: 0.18 },
-                    fresnelPower: { value: 3.0 },
-                    fresnelStrength: { value: 0.18 }
+                    specularThreshold: { value: parseFloat(document.getElementById('waterSpecularThresholdSlider').value) },
+                    specularStrength: { value: parseFloat(document.getElementById('waterSpecularStrengthSlider').value) },
+                    fresnelPower: { value: parseFloat(document.getElementById('waterFresnelPowerSlider').value) },
+                    fresnelStrength: { value: parseFloat(document.getElementById('waterFresnelStrengthSlider').value) },
+                    waterNormalStrength: { value: parseFloat(document.getElementById('waterNormalStrengthSlider').value) }
                 },
                 vertexShader: waterVertex,
                 fragmentShader: waterFragment,
@@ -796,6 +804,17 @@
             document.getElementById('waterSpecularStrengthValue').textContent = document.getElementById('waterSpecularStrengthSlider').value;
             document.getElementById('waterFresnelPowerValue').textContent = document.getElementById('waterFresnelPowerSlider').value;
             document.getElementById('waterFresnelStrengthValue').textContent = document.getElementById('waterFresnelStrengthSlider').value;
+            // 监听纹理强度滑杆，实时同步到shader
+            const waterNormalStrengthSlider = document.getElementById('waterNormalStrengthSlider');
+            const waterNormalStrengthValue = document.getElementById('waterNormalStrengthValue');
+            waterNormalStrengthSlider.addEventListener('input', e => {
+                waterNormalStrengthValue.textContent = parseFloat(e.target.value).toFixed(2);
+                if (waterMesh && waterMesh.material && waterMesh.material.uniforms.waterNormalStrength)
+                    waterMesh.material.uniforms.waterNormalStrength.value = parseFloat(e.target.value);
+            });
+            // 初始化同步
+            if (waterMesh && waterMesh.material && waterMesh.material.uniforms.waterNormalStrength)
+                waterMesh.material.uniforms.waterNormalStrength.value = parseFloat(waterNormalStrengthSlider.value);
         });
     </script>
 </body>
