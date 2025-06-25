@@ -57,7 +57,7 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: linear-gradient(-90deg, #60a4fd91 0%, #dd8fff42 100%);  
+            background: linear-gradient(-90deg, #60a4fd91 0%, #dd8fff42 100%);
             color: rgb(23, 39, 54);
             padding: 15px;
             border-radius: 15px;
@@ -264,8 +264,8 @@
             <div style="margin-top:10px;">
                 <label>
                     <span style="font-weight:bold;color:#4ecdc4;margin-right:8px;">高光范围</span><input
-                        id="waterSpecularThresholdSlider" type="range" min="0" max="1.0" step="0.01"
-                        value="0.1"><span id="waterSpecularThresholdValue">0.1</span>
+                        id="waterSpecularThresholdSlider" type="range" min="0" max="1.0" step="0.01" value="0.1"><span
+                        id="waterSpecularThresholdValue">0.1</span>
                 </label>
             </div>
             <div>
@@ -290,7 +290,8 @@
             <div style="margin-bottom:10px;">
                 <label>
                     <span style="font-weight:bold;color:#4ecdc4;margin-right:8px;">纹理强度</span>
-                    <input type="range" id="waterNormalStrengthSlider" min="0" max="2" step="0.01" value="0.2" style="vertical-align:middle;width:120px;">
+                    <input type="range" id="waterNormalStrengthSlider" min="0" max="2" step="0.01" value="0.2"
+                        style="vertical-align:middle;width:120px;">
                     <span id="waterNormalStrengthValue">0.20</span>
                 </label>
             </div>
@@ -341,498 +342,581 @@
 
     <!-- JavaScript开始 - 这里是WebGL的核心逻辑 -->
     <script>
-/**
- * ========== 工具函数区 ==========
- * 用于加载shader等通用操作
- */
-async function loadShader(url) {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('无法加载shader: ' + url);
-    const text = await response.text();
-    if (!text) throw new Error('shader内容为空: ' + url);
-    return text;
-}
-
-/**
- * ========== 全局变量区 ==========
- * 这些变量贯穿整个WebGL场景的生命周期
- */
-let scene, camera, renderer, controls, waterMesh, testObjects = {};
-let mainLight, skyMaterial;
-let halfLambertMaterials = [];
-let globalBrightness = 0.7, globalShadow = 0.6;
-
-// 进度条相关DOM
-const progressFill = document.getElementById('progressFill');
-const progressText = document.getElementById('progressText');
-const progressContainer = document.getElementById('progressContainer');
-
-/**
- * ========== 进度条功能 ==========
- * 用于展示加载/初始化进度
- */
-function updateProgress(percent, text) {
-    progressFill.style.width = percent + '%';
-    progressText.textContent = text;
-    if (percent >= 100) {
-        setTimeout(() => {
-            progressContainer.style.opacity = '0';
-            setTimeout(() => { progressContainer.style.display = 'none'; }, 500);
-        }, 1000);
-    }
-}
-
-/**
- * ========== 通用事件绑定函数 ==========
- * 封装滑杆、颜色选择器等重复逻辑，减少冗余
- */
-// 滑杆数值显示和shader同步
-function bindSlider(sliderId, valueId, uniformName = null, digits = 2) {
-    const slider = document.getElementById(sliderId);
-    const value = document.getElementById(valueId);
-    function update(val) {
-        value.textContent = parseFloat(val).toFixed(digits);
-        if (uniformName && waterMesh && waterMesh.material && waterMesh.material.uniforms[uniformName]) {
-            waterMesh.material.uniforms[uniformName].value = parseFloat(val);
+        /**
+         * ========== 工具函数区 ==========
+         * 用于加载shader等通用操作
+         */
+        async function loadShader(url) {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('无法加载shader: ' + url);
+            const text = await response.text();
+            if (!text) throw new Error('shader内容为空: ' + url);
+            return text;
         }
-    }
-    slider.addEventListener('input', e => update(e.target.value));
-    update(slider.value);
-}
-// 颜色选择器事件绑定
-function bindColorPicker(pickerId, onChange) {
-    const picker = document.getElementById(pickerId);
-    picker.addEventListener('input', e => onChange(e.target.value));
-}
-// 主光方向滑杆绑定
-function bindSunDirectionSliders() {
-    const xSlider = document.getElementById('sunDirXSlider');
-    const zSlider = document.getElementById('sunDirZSlider');
-    xSlider.addEventListener('input', updateMainLightDirection);
-    zSlider.addEventListener('input', updateMainLightDirection);
-    updateMainLightDirection();
-}
 
-/**
- * ========== 主初始化流程 ==========
- * 依次初始化渲染器、天空、光照、水面、物体、动画循环
- */
-async function initCartoonWorld() {
-    try {
-        updateProgress(20, '🔧 初始化WebGL渲染器...');
-        await initWebGLRenderer();
-        updateProgress(40, '🌈 创建卡通天空...');
-        await createCartoonSkybox();
-        updateProgress(60, '💡 设置卡通光照...');
-        setupCartoonLighting();
-        updateProgress(80, '🌊 创建卡通水面...');
-        await createCartoonWater();
-        updateProgress(90, '🎪 添加测试物体...');
-        await createTestObjects();
-        updateProgress(95, '🎬 启动动画循环...');
-        startRenderLoop();
-        updateProgress(100, '✨ 卡通世界创建完成！');
-    } catch (error) {
-        console.error('❌ 初始化失败:', error);
-        updateProgress(0, '❌ 创建失败，请检查控制台');
-    }
-}
+        /**
+         * ========== 全局变量区 ==========
+         * 这些变量贯穿整个WebGL场景的生命周期
+         */
+        let scene, camera, renderer, controls, waterMesh, testObjects = {};
+        let mainLight, skyMaterial;
+        let halfLambertMaterials = [];
+        let globalBrightness = 0.7, globalShadow = 0.6;
 
-// 5. WebGL渲染器初始化
-async function initWebGLRenderer() {
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 20, 30);
-    camera.lookAt(0, 0, 0);
-    const canvas = document.getElementById('canvas');
-    renderer = new THREE.WebGLRenderer({
-        canvas: canvas,
-        antialias: true,
-        alpha: true,
-        powerPreference: "high-performance"
-    });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1;
-    setupOrbitControls();
-}
+        // 进度条相关DOM
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const progressContainer = document.getElementById('progressContainer');
 
-function setupOrbitControls() {
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
-    script.onload = () => {
-        controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.25;
-        controls.minDistance = 5;
-        controls.maxDistance = 100;
-        controls.maxPolarAngle = Math.PI / 2.1;
-        controls.mouseButtons = {
-            LEFT: THREE.MOUSE.ROTATE,
-            MIDDLE: THREE.MOUSE.PAN,
-            RIGHT: undefined
-        };
-    };
-    document.head.appendChild(script);
-}
-
-// 6. 天空盒创建
-async function createCartoonSkybox() {
-    const skyGeometry = new THREE.SphereGeometry(500, 32, 32);
-    const vertexShader = await loadShader('shaders/sky.vert');
-    const fragmentShader = await loadShader('shaders/sky.frag');
-    skyMaterial = new THREE.ShaderMaterial({
-        vertexShader, fragmentShader,
-        uniforms: {
-            topColor: { value: new THREE.Color("#2741A5") },
-            middleColor: { value: new THREE.Color("#3789E1") },
-            bottomColor: { value: new THREE.Color("#ABDEF7") },
-            offset: { value: 33 },
-            exponent: { value: 0.6 },
-            brightness: { value: parseFloat(document.getElementById('brightnessSlider').value) }
-        },
-        side: THREE.BackSide
-    });
-    const sky = new THREE.Mesh(skyGeometry, skyMaterial);
-    scene.add(sky);
-}
-
-// 7. 主光照设置
-function setupCartoonLighting() {
-    const sunColor = document.getElementById('sunColorPicker').value;
-    globalBrightness = parseFloat(document.getElementById('brightnessSlider').value);
-    mainLight = new THREE.DirectionalLight(sunColor, globalBrightness);
-    // 方向由滑杆控制
-    updateMainLightDirection();
-    mainLight.castShadow = true;
-    mainLight.shadow.mapSize.width = 4096;
-    mainLight.shadow.mapSize.height = 4096;
-    mainLight.shadow.camera.near = 0.5;
-    mainLight.shadow.camera.far = 500;
-    mainLight.shadow.camera.left = -100;
-    mainLight.shadow.camera.right = 100;
-    mainLight.shadow.camera.top = 100;
-    mainLight.shadow.camera.bottom = -100;
-    mainLight.shadow.bias = 0;
-    mainLight.shadow.normalBias = -0.04;
-    scene.add(mainLight);
-}
-
-// 8. 创建卡通水面
-async function createCartoonWater() {
-    const waterGeometry = new THREE.PlaneGeometry(200, 200, 64, 64);
-    waterGeometry.computeTangents();
-    const waterVertex = await loadShader('shaders/cartoonWater.vert');
-    const waterFragment = await loadShader('shaders/cartoonWater.frag');
-    const lightDir = mainLight ? mainLight.position.clone().normalize() : new THREE.Vector3(1, 2, 1).normalize();
-    const lightColor = mainLight ? mainLight.color.clone() : new THREE.Color(document.getElementById('sunColorPicker').value);
-    const ambientColor = new THREE.Color(document.getElementById('bottomColorPicker').value);
-    const baseColor = new THREE.Color(0x4ECDC4);
-    const normalMap = new THREE.TextureLoader().load('textures/waterNormal.png');
-    normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping;
-    waterMesh = new THREE.Mesh(waterGeometry, new THREE.ShaderMaterial({
-        uniforms: {
-            lightDirection: { value: lightDir.clone() },
-            lightColor: { value: lightColor.clone() },
-            ambientColor: { value: ambientColor.clone() },
-            baseColor: { value: baseColor.clone() },
-            brightness: { value: globalBrightness },
-            shadow: { value: globalShadow },
-            cameraPosition: { value: camera.position.clone() },
-            normalMap: { value: normalMap },
-            time: { value: 0.0 },
-            repeat: { value: parseFloat(document.getElementById('waterRepeatSlider').value) },
-            speed: { value: parseFloat(document.getElementById('waterSpeedSlider').value) },
-            specularThreshold: { value: parseFloat(document.getElementById('waterSpecularThresholdSlider').value) },
-            specularStrength: { value: parseFloat(document.getElementById('waterSpecularStrengthSlider').value) },
-            fresnelPower: { value: parseFloat(document.getElementById('waterFresnelPowerSlider').value) },
-            fresnelStrength: { value: parseFloat(document.getElementById('waterFresnelStrengthSlider').value) },
-            waterNormalStrength: { value: parseFloat(document.getElementById('waterNormalStrengthSlider').value) }
-        },
-        vertexShader: waterVertex,
-        fragmentShader: waterFragment,
-        transparent: false,
-        side: THREE.DoubleSide
-    }));
-    waterMesh.rotation.x = -Math.PI / 2;
-    waterMesh.position.y = 0;
-    waterMesh.receiveShadow = true;
-    scene.add(waterMesh);
-}
-
-// 9. 创建测试物体（卡通风格）
-async function createTestObjects() {
-    const halfLambertVertex = await loadShader('shaders/halfLambert.vert');
-    const halfLambertFragment = await loadShader('shaders/halfLambert.frag');
-    const lightDir = mainLight ? mainLight.position.clone().normalize() : new THREE.Vector3(1, 2, 1).normalize();
-    const lightColor = mainLight ? mainLight.color.clone() : new THREE.Color(document.getElementById('sunColorPicker').value);
-    const ambientColor = new THREE.Color(document.getElementById('bottomColorPicker').value);
-    function createHalfLambertMaterial(color) {
-        const mat = new THREE.ShaderMaterial({
-            uniforms: {
-                lightDirection: { value: lightDir.clone() },
-                lightColor: { value: lightColor.clone() },
-                ambientColor: { value: ambientColor.clone() },
-                baseColor: { value: new THREE.Color(color) },
-                brightness: { value: globalBrightness },
-                shadow: { value: globalShadow },
-            },
-            vertexShader: halfLambertVertex,
-            fragmentShader: halfLambertFragment
-        });
-        halfLambertMaterials.push(mat);
-        return mat;
-    }
-    // 立方体
-    const cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
-    const cubeMaterial = createHalfLambertMaterial(0xFF6B9D);
-    const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-    cube.position.set(-10, 0, 0);
-    cube.castShadow = true;
-    cube.receiveShadow = true;
-    scene.add(cube);
-    testObjects.cube = cube;
-    // 球体
-    const sphereGeometry = new THREE.SphereGeometry(3, 32, 32);
-    const sphereMaterial = createHalfLambertMaterial(0xFFE135);
-    const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-    sphere.position.set(10, 0, 0);
-    sphere.castShadow = true;
-    sphere.receiveShadow = true;
-    scene.add(sphere);
-    testObjects.sphere = sphere;
-    // 圆锥
-    const coneGeometry = new THREE.ConeGeometry(3, 6, 8);
-    const coneMaterial = createHalfLambertMaterial(0x95E1D3);
-    const cone = new THREE.Mesh(coneGeometry, coneMaterial);
-    cone.position.set(0, 0, -15);
-    cone.castShadow = true;
-    cone.receiveShadow = true;
-    scene.add(cone);
-    testObjects.cone = cone;
-}
-
-// 10. 渲染循环
-function startRenderLoop() {
-    const startTime = Date.now();
-    function animate() {
-        requestAnimationFrame(animate);
-        const elapsedTime = (Date.now() - startTime) / 1000;
-        updateAnimations(elapsedTime);
-        if (controls) controls.update();
-        updateWaterCameraUniform();
-        if (waterMesh && waterMesh.material && waterMesh.material.uniforms.time) {
-            waterMesh.material.uniforms.time.value = performance.now() * 0.001;
+        /**
+         * ========== 进度条功能 ==========
+         * 用于展示加载/初始化进度
+         */
+        function updateProgress(percent, text) {
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+            if (percent >= 100) {
+                setTimeout(() => {
+                    progressContainer.style.opacity = '0';
+                    setTimeout(() => { progressContainer.style.display = 'none'; }, 500);
+                }, 1000);
+            }
         }
-        renderer.render(scene, camera);
-    }
-    animate();
-}
 
-// 11. 动画更新（物体动画）
-function updateAnimations(time) {
-    if (testObjects.cube) {
-        testObjects.cube.rotation.y = time * 0.2;
-        testObjects.cube.rotation.x = Math.sin(time) * 0.2;
-    }
-    if (testObjects.sphere) {
-        testObjects.sphere.position.y = Math.sin(time * 2) * 0.4 + 0.2;
-        testObjects.sphere.rotation.z = time * 0.3;
-    }
-    if (testObjects.cone) {
-        testObjects.cone.rotation.z = Math.sin(time * 1.5) * 0.15;
-        testObjects.cone.position.y = Math.cos(time * 0.8) * 0.3 + 1;
-    }
-}
+        /**
+         * ========== 通用事件绑定函数 ==========
+         * 封装滑杆、颜色选择器等重复逻辑，减少冗余
+         */
+        // 滑杆数值显示和shader同步
+        function bindSlider(sliderId, valueId, uniformName = null, digits = 2) {
+            const slider = document.getElementById(sliderId);
+            const value = document.getElementById(valueId);
+            function update(val) {
+                value.textContent = parseFloat(val).toFixed(digits);
+                if (uniformName && waterMesh && waterMesh.material && waterMesh.material.uniforms[uniformName]) {
+                    waterMesh.material.uniforms[uniformName].value = parseFloat(val);
+                }
+            }
+            slider.addEventListener('input', e => update(e.target.value));
+            update(slider.value);
+        }
+        // 颜色选择器事件绑定
+        function bindColorPicker(pickerId, onChange) {
+            const picker = document.getElementById(pickerId);
+            picker.addEventListener('input', e => onChange(e.target.value));
+        }
+        // 主光方向滑杆绑定
+        function bindSunDirectionSliders() {
+            const xSlider = document.getElementById('sunDirXSlider');
+            const zSlider = document.getElementById('sunDirZSlider');
+            xSlider.addEventListener('input', updateMainLightDirection);
+            zSlider.addEventListener('input', updateMainLightDirection);
+            updateMainLightDirection();
+        }
 
-// 12. 响应式处理
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-});
+        /**
+         * ========== 主初始化流程 ==========
+         * 依次初始化渲染器、天空、光照、水面、物体、动画循环
+         */
+        async function initCartoonWorld() {
+            try {
+                updateProgress(20, '🔧 初始化WebGL渲染器...');
+                await initWebGLRenderer();
+                updateProgress(40, '🌈 创建卡通天空...');
+                await createCartoonSkybox();
+                updateProgress(60, '💡 设置卡通光照...');
+                setupCartoonLighting();
+                updateProgress(80, '🌊 创建卡通水面...');
+                await createCartoonWater();
+                updateProgress(90, '🎪 添加测试物体...');
+                await createTestObjects();
+                updateProgress(95, '🎬 启动动画循环...');
+                startRenderLoop();
+                updateProgress(100, '✨ 卡通世界创建完成！');
+            } catch (error) {
+                console.error('❌ 初始化失败:', error);
+                updateProgress(0, '❌ 创建失败，请检查控制台');
+            }
+        }
 
-/**
- * ========== 页面加载启动 ==========
- * 页面加载后延迟启动主流程，并批量绑定所有滑杆和颜色控件
- */
-window.addEventListener('load', async () => {
-    // 批量绑定滑杆和颜色控件
-    bindSlider('waterRepeatSlider', 'waterRepeatValue', 'repeat');
-    bindSlider('waterSpeedSlider', 'waterSpeedValue', 'speed');
-    bindSlider('waterSpecularThresholdSlider', 'waterSpecularThresholdValue', 'specularThreshold');
-    bindSlider('waterSpecularStrengthSlider', 'waterSpecularStrengthValue', 'specularStrength');
-    bindSlider('waterFresnelPowerSlider', 'waterFresnelPowerValue', 'fresnelPower');
-    bindSlider('waterFresnelStrengthSlider', 'waterFresnelStrengthValue', 'fresnelStrength');
-    bindSlider('waterNormalStrengthSlider', 'waterNormalStrengthValue', 'waterNormalStrength');
-    bindSlider('shadowSlider', 'shadowValue');
-    bindSlider('brightnessSlider', 'brightnessValue');
-    bindColorPicker('bottomColorPicker', val => {
-        if (skyMaterial) skyMaterial.uniforms.bottomColor.value.set(val);
-        const ambColor = new THREE.Color(val);
-        halfLambertMaterials.forEach(mat => {
-            if (mat.uniforms.ambientColor) mat.uniforms.ambientColor.value.copy(ambColor);
+        // 5. WebGL渲染器初始化
+        async function initWebGLRenderer() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 20, 30);
+            camera.lookAt(0, 0, 0);
+            const canvas = document.getElementById('canvas');
+            renderer = new THREE.WebGLRenderer({
+                canvas: canvas,
+                antialias: true,
+                alpha: true,
+                powerPreference: "high-performance"
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1;
+            setupOrbitControls();
+        }
+
+        function setupOrbitControls() {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
+            script.onload = () => {
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.25;
+                controls.minDistance = 5;
+                controls.maxDistance = 100;
+                controls.maxPolarAngle = Math.PI / 2.1;
+                controls.mouseButtons = {
+                    LEFT: THREE.MOUSE.ROTATE,
+                    MIDDLE: THREE.MOUSE.PAN,
+                    RIGHT: undefined
+                };
+            };
+            document.head.appendChild(script);
+        }
+
+        // 6. 天空盒创建
+        async function createCartoonSkybox() {
+            const skyGeometry = new THREE.SphereGeometry(500, 32, 32);
+            const vertexShader = await loadShader('shaders/sky.vert');
+            const fragmentShader = await loadShader('shaders/sky.frag');
+            skyMaterial = new THREE.ShaderMaterial({
+                vertexShader, fragmentShader,
+                uniforms: {
+                    topColor: { value: new THREE.Color("#2741A5") },
+                    middleColor: { value: new THREE.Color("#3789E1") },
+                    bottomColor: { value: new THREE.Color("#ABDEF7") },
+                    offset: { value: 33 },
+                    exponent: { value: 0.6 },
+                    brightness: { value: parseFloat(document.getElementById('brightnessSlider').value) }
+                },
+                side: THREE.BackSide
+            });
+            const sky = new THREE.Mesh(skyGeometry, skyMaterial);
+            scene.add(sky);
+        }
+
+        // 7. 主光照设置
+        function setupCartoonLighting() {
+            const sunColor = document.getElementById('sunColorPicker').value;
+            globalBrightness = parseFloat(document.getElementById('brightnessSlider').value);
+            mainLight = new THREE.DirectionalLight(sunColor, globalBrightness);
+            // 方向由滑杆控制
+            updateMainLightDirection();
+            mainLight.castShadow = true;
+            mainLight.shadow.mapSize.width = 4096;
+            mainLight.shadow.mapSize.height = 4096;
+            mainLight.shadow.camera.near = 0.5;
+            mainLight.shadow.camera.far = 500;
+            mainLight.shadow.camera.left = -100;
+            mainLight.shadow.camera.right = 100;
+            mainLight.shadow.camera.top = 100;
+            mainLight.shadow.camera.bottom = -100;
+            mainLight.shadow.bias = 0;
+            mainLight.shadow.normalBias = -0.04;
+            scene.add(mainLight);
+        }
+
+        // 8. 创建卡通水面
+        async function createCartoonWater() {
+            const waterGeometry = new THREE.PlaneGeometry(200, 200, 128, 128);
+            waterGeometry.computeTangents();
+            const waterVertex = await loadShader('shaders/cartoonWater.vert');
+            const waterFragment = await loadShader('shaders/cartoonWater.frag');
+            const lightDir = mainLight ? mainLight.position.clone().normalize() : new THREE.Vector3(1, 2, 1).normalize();
+            const lightColor = mainLight ? mainLight.color.clone() : new THREE.Color(document.getElementById('sunColorPicker').value);
+            const ambientColor = new THREE.Color(document.getElementById('bottomColorPicker').value);
+            const baseColor = new THREE.Color(0x4ECDC4);
+            const normalMap = new THREE.TextureLoader().load('textures/waterNormal.png');
+            normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping;
+            waterMesh = new THREE.Mesh(waterGeometry, new THREE.ShaderMaterial({
+                uniforms: {
+                    lightDirection: { value: lightDir.clone() },
+                    lightColor: { value: lightColor.clone() },
+                    ambientColor: { value: ambientColor.clone() },
+                    baseColor: { value: baseColor.clone() },
+                    brightness: { value: globalBrightness },
+                    shadow: { value: globalShadow },
+                    cameraPosition: { value: camera.position.clone() },
+                    normalMap: { value: normalMap },
+                    time: { value: 0.0 },
+                    repeat: { value: parseFloat(document.getElementById('waterRepeatSlider').value) },
+                    speed: { value: parseFloat(document.getElementById('waterSpeedSlider').value) },
+                    specularThreshold: { value: parseFloat(document.getElementById('waterSpecularThresholdSlider').value) },
+                    specularStrength: { value: parseFloat(document.getElementById('waterSpecularStrengthSlider').value) },
+                    fresnelPower: { value: parseFloat(document.getElementById('waterFresnelPowerSlider').value) },
+                    fresnelStrength: { value: parseFloat(document.getElementById('waterFresnelStrengthSlider').value) },
+                    waterNormalStrength: { value: parseFloat(document.getElementById('waterNormalStrengthSlider').value) },
+                    waveCenters: { value: Array(MAX_WAVES).fill(new THREE.Vector2(0, 0)) },
+                    waveStartTimes: { value: Array(MAX_WAVES).fill(-10) },
+                    waveCount: { value: 0 }
+                },
+                vertexShader: waterVertex,
+                fragmentShader: waterFragment,
+                transparent: false,
+                side: THREE.DoubleSide
+            }));
+
+            // 添加涟漪法线贴图
+            const ringNormalMap = new THREE.TextureLoader().load('textures/rippleNormal.png');
+            ringNormalMap.wrapS = ringNormalMap.wrapT = THREE.ClampToEdgeWrapping;
+
+            waterMesh = new THREE.Mesh(waterGeometry, new THREE.ShaderMaterial({
+                uniforms: {
+                    lightDirection: { value: lightDir.clone() },
+                    lightColor: { value: lightColor.clone() },
+                    ambientColor: { value: ambientColor.clone() },
+                    baseColor: { value: baseColor.clone() },
+                    brightness: { value: globalBrightness },
+                    shadow: { value: globalShadow },
+                    cameraPosition: { value: camera.position.clone() },
+                    normalMap: { value: normalMap },
+                    ringNormalMap: { value: ringNormalMap }, // 新增
+                    time: { value: 0.0 },
+                    repeat: { value: parseFloat(document.getElementById('waterRepeatSlider').value) },
+                    speed: { value: parseFloat(document.getElementById('waterSpeedSlider').value) },
+                    specularThreshold: { value: parseFloat(document.getElementById('waterSpecularThresholdSlider').value) },
+                    specularStrength: { value: parseFloat(document.getElementById('waterSpecularStrengthSlider').value) },
+                    fresnelPower: { value: parseFloat(document.getElementById('waterFresnelPowerSlider').value) },
+                    fresnelStrength: { value: parseFloat(document.getElementById('waterFresnelStrengthSlider').value) },
+                    waterNormalStrength: { value: parseFloat(document.getElementById('waterNormalStrengthSlider').value) },
+                    waveCenters: { value: Array(MAX_WAVES).fill(new THREE.Vector2(0, 0)) },
+                    waveStartTimes: { value: Array(MAX_WAVES).fill(-10) },
+                    waveCount: { value: 0 }
+                },
+                vertexShader: waterVertex,
+                fragmentShader: waterFragment,
+                transparent: false,
+                side: THREE.DoubleSide
+            }));
+            waterMesh.rotation.x = -Math.PI / 2;
+            waterMesh.position.y = 0;
+            waterMesh.receiveShadow = true;
+            scene.add(waterMesh);
+        }
+
+        // 9. 创建测试物体（卡通风格）
+        async function createTestObjects() {
+            const halfLambertVertex = await loadShader('shaders/halfLambert.vert');
+            const halfLambertFragment = await loadShader('shaders/halfLambert.frag');
+            const lightDir = mainLight ? mainLight.position.clone().normalize() : new THREE.Vector3(1, 2, 1).normalize();
+            const lightColor = mainLight ? mainLight.color.clone() : new THREE.Color(document.getElementById('sunColorPicker').value);
+            const ambientColor = new THREE.Color(document.getElementById('bottomColorPicker').value);
+            function createHalfLambertMaterial(color) {
+                const mat = new THREE.ShaderMaterial({
+                    uniforms: {
+                        lightDirection: { value: lightDir.clone() },
+                        lightColor: { value: lightColor.clone() },
+                        ambientColor: { value: ambientColor.clone() },
+                        baseColor: { value: new THREE.Color(color) },
+                        brightness: { value: globalBrightness },
+                        shadow: { value: globalShadow },
+                    },
+                    vertexShader: halfLambertVertex,
+                    fragmentShader: halfLambertFragment
+                });
+                halfLambertMaterials.push(mat);
+                return mat;
+            }
+            // 立方体
+            const cubeGeometry = new THREE.BoxGeometry(4, 4, 4);
+            const cubeMaterial = createHalfLambertMaterial(0xFF6B9D);
+            const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+            cube.position.set(-10, 0, 0);
+            cube.castShadow = true;
+            cube.receiveShadow = true;
+            scene.add(cube);
+            testObjects.cube = cube;
+            // 球体
+            const sphereGeometry = new THREE.SphereGeometry(3, 32, 32);
+            const sphereMaterial = createHalfLambertMaterial(0xFFE135);
+            const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+            sphere.position.set(10, 0, 0);
+            sphere.castShadow = true;
+            sphere.receiveShadow = true;
+            scene.add(sphere);
+            testObjects.sphere = sphere;
+            // 圆锥
+            const coneGeometry = new THREE.ConeGeometry(3, 6, 8);
+            const coneMaterial = createHalfLambertMaterial(0x95E1D3);
+            const cone = new THREE.Mesh(coneGeometry, coneMaterial);
+            cone.position.set(0, 0, -15);
+            cone.castShadow = true;
+            cone.receiveShadow = true;
+            scene.add(cone);
+            testObjects.cone = cone;
+        }
+
+        // 10. 渲染循环
+        function startRenderLoop() {
+            const startTime = Date.now();
+            function animate() {
+                requestAnimationFrame(animate);
+                const elapsedTime = (Date.now() - startTime) / 1000;
+                updateAnimations(elapsedTime);
+                if (controls) controls.update();
+                updateWaterCameraUniform();
+                if (waterMesh && waterMesh.material && waterMesh.material.uniforms.time) {
+                    waterMesh.material.uniforms.time.value = performance.now() * 0.001;
+                }
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        // 11. 动画更新（物体动画）
+        function updateAnimations(time) {
+            if (testObjects.cube) {
+                testObjects.cube.rotation.y = time * 0.2;
+                testObjects.cube.rotation.x = Math.sin(time) * 0.2;
+            }
+            if (testObjects.sphere) {
+                testObjects.sphere.position.y = Math.sin(time * 2) * 0.4 + 0.2;
+                testObjects.sphere.rotation.z = time * 0.3;
+            }
+            if (testObjects.cone) {
+                testObjects.cone.rotation.z = Math.sin(time * 1.5) * 0.15;
+                testObjects.cone.position.y = Math.cos(time * 0.8) * 0.3 + 1;
+            }
+        }
+
+        // 12. 响应式处理
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         });
-        updateWaterUniforms();
-    });
-    bindColorPicker('middleColorPicker', val => {
-        if (skyMaterial) skyMaterial.uniforms.middleColor.value.set(val);
-    });
-    bindColorPicker('sunColorPicker', val => {
-        if (mainLight) mainLight.color.set(val);
-        const sunColor = new THREE.Color(val);
-        halfLambertMaterials.forEach(mat => {
-            if (mat.uniforms.lightColor) mat.uniforms.lightColor.value.copy(sunColor);
+
+        /**
+         * ========== 页面加载启动 ==========
+         * 页面加载后延迟启动主流程，并批量绑定所有滑杆和颜色控件
+         */
+        window.addEventListener('load', async () => {
+            // 批量绑定滑杆和颜色控件
+            bindSlider('waterRepeatSlider', 'waterRepeatValue', 'repeat');
+            bindSlider('waterSpeedSlider', 'waterSpeedValue', 'speed');
+            bindSlider('waterSpecularThresholdSlider', 'waterSpecularThresholdValue', 'specularThreshold');
+            bindSlider('waterSpecularStrengthSlider', 'waterSpecularStrengthValue', 'specularStrength');
+            bindSlider('waterFresnelPowerSlider', 'waterFresnelPowerValue', 'fresnelPower');
+            bindSlider('waterFresnelStrengthSlider', 'waterFresnelStrengthValue', 'fresnelStrength');
+            bindSlider('waterNormalStrengthSlider', 'waterNormalStrengthValue', 'waterNormalStrength');
+            bindSlider('shadowSlider', 'shadowValue');
+            bindSlider('brightnessSlider', 'brightnessValue');
+            bindColorPicker('bottomColorPicker', val => {
+                if (skyMaterial) skyMaterial.uniforms.bottomColor.value.set(val);
+                const ambColor = new THREE.Color(val);
+                halfLambertMaterials.forEach(mat => {
+                    if (mat.uniforms.ambientColor) mat.uniforms.ambientColor.value.copy(ambColor);
+                });
+                updateWaterUniforms();
+            });
+            bindColorPicker('middleColorPicker', val => {
+                if (skyMaterial) skyMaterial.uniforms.middleColor.value.set(val);
+            });
+            bindColorPicker('sunColorPicker', val => {
+                if (mainLight) mainLight.color.set(val);
+                const sunColor = new THREE.Color(val);
+                halfLambertMaterials.forEach(mat => {
+                    if (mat.uniforms.lightColor) mat.uniforms.lightColor.value.copy(sunColor);
+                });
+                updateWaterUniforms();
+            });
+            document.getElementById('brightnessSlider').addEventListener('input', e => {
+                globalBrightness = parseFloat(e.target.value);
+                if (mainLight) mainLight.intensity = 1.5 * globalBrightness;
+                if (skyMaterial) skyMaterial.uniforms.brightness.value = globalBrightness;
+                halfLambertMaterials.forEach(mat => {
+                    if (mat.uniforms.brightness) mat.uniforms.brightness.value = globalBrightness;
+                });
+                updateWaterUniforms();
+            });
+            document.getElementById('shadowSlider').addEventListener('input', e => {
+                globalShadow = parseFloat(e.target.value);
+                halfLambertMaterials.forEach(mat => {
+                    if (mat.uniforms.shadow) mat.uniforms.shadow.value = globalShadow;
+                });
+                updateWaterUniforms();
+            });
+            bindSunDirectionSliders();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await initCartoonWorld();
         });
-        updateWaterUniforms();
-    });
-    document.getElementById('brightnessSlider').addEventListener('input', e => {
-        globalBrightness = parseFloat(e.target.value);
-        if (mainLight) mainLight.intensity = 1.5 * globalBrightness;
-        if (skyMaterial) skyMaterial.uniforms.brightness.value = globalBrightness;
-        halfLambertMaterials.forEach(mat => {
-            if (mat.uniforms.brightness) mat.uniforms.brightness.value = globalBrightness;
+
+        // 14. 颜色和明暗调节事件监听
+        // 监听天空底部颜色，实时更新环境光颜色
+        document.getElementById('bottomColorPicker').addEventListener('input', e => {
+            if (skyMaterial) skyMaterial.uniforms.bottomColor.value.set(e.target.value);
+            // 同步所有halfLambert材质的环境光颜色
+            const ambColor = new THREE.Color(e.target.value);
+            halfLambertMaterials.forEach(mat => {
+                if (mat.uniforms.ambientColor) mat.uniforms.ambientColor.value.copy(ambColor);
+            });
+            updateWaterUniforms();
         });
-        updateWaterUniforms();
-    });
-    document.getElementById('shadowSlider').addEventListener('input', e => {
-        globalShadow = parseFloat(e.target.value);
-        halfLambertMaterials.forEach(mat => {
-            if (mat.uniforms.shadow) mat.uniforms.shadow.value = globalShadow;
+
+        // 阳光颜色拾色器，实时更新 mainLight 颜色和所有halfLambert材质的主光颜色
+        document.getElementById('sunColorPicker').addEventListener('input', e => {
+            if (mainLight) mainLight.color.set(e.target.value);
+            // 同步所有halfLambert材质的主光颜色
+            const sunColor = new THREE.Color(e.target.value);
+            halfLambertMaterials.forEach(mat => {
+                if (mat.uniforms.lightColor) mat.uniforms.lightColor.value.copy(sunColor);
+            });
+            updateWaterUniforms();
         });
-        updateWaterUniforms();
-    });
-    bindSunDirectionSliders();
-    await new Promise(resolve => setTimeout(resolve, 500));
-    await initCartoonWorld();
-});
 
-// 14. 颜色和明暗调节事件监听
-// 监听天空底部颜色，实时更新环境光颜色
-document.getElementById('bottomColorPicker').addEventListener('input', e => {
-    if (skyMaterial) skyMaterial.uniforms.bottomColor.value.set(e.target.value);
-    // 同步所有halfLambert材质的环境光颜色
-    const ambColor = new THREE.Color(e.target.value);
-    halfLambertMaterials.forEach(mat => {
-        if (mat.uniforms.ambientColor) mat.uniforms.ambientColor.value.copy(ambColor);
-    });
-    updateWaterUniforms();
-});
-
-// 阳光颜色拾色器，实时更新 mainLight 颜色和所有halfLambert材质的主光颜色
-document.getElementById('sunColorPicker').addEventListener('input', e => {
-    if (mainLight) mainLight.color.set(e.target.value);
-    // 同步所有halfLambert材质的主光颜色
-    const sunColor = new THREE.Color(e.target.value);
-    halfLambertMaterials.forEach(mat => {
-        if (mat.uniforms.lightColor) mat.uniforms.lightColor.value.copy(sunColor);
-    });
-    updateWaterUniforms();
-});
-
-// 明暗滑杆，实时更新 mainLight 强度和所有halfLambert材质明暗
-document.getElementById('brightnessSlider').addEventListener('input', e => {
-    globalBrightness = parseFloat(e.target.value);
-    if (mainLight) mainLight.intensity = 1.5 * globalBrightness;
-    if (skyMaterial) skyMaterial.uniforms.brightness.value = globalBrightness;
-    halfLambertMaterials.forEach(mat => {
-        if (mat.uniforms.brightness) mat.uniforms.brightness.value = globalBrightness;
-    });
-    updateWaterUniforms();
-});
-
-// 阴影滑杆，实时更新所有halfLambert材质的暗部uniform
-document.getElementById('shadowSlider').addEventListener('input', e => {
-    globalShadow = parseFloat(e.target.value);
-    halfLambertMaterials.forEach(mat => {
-        if (mat.uniforms.shadow) mat.uniforms.shadow.value = globalShadow;
-    });
-    updateWaterUniforms();
-});
-
-// 监听天空中间颜色，实时更新天空球的中间色
-document.getElementById('middleColorPicker').addEventListener('input', e => {
-    if (skyMaterial) skyMaterial.uniforms.middleColor.value.set(e.target.value);
-});
-
-// 水面shader联动：主光、环境光、明暗、阴影、相机参数
-function updateWaterUniforms() {
-    if (!waterMesh || !waterMesh.material || !waterMesh.material.uniforms) return;
-    // 主光
-    if (mainLight && waterMesh.material.uniforms.lightDirection)
-        waterMesh.material.uniforms.lightDirection.value.copy(mainLight.position.clone().normalize());
-    if (mainLight && waterMesh.material.uniforms.lightColor)
-        waterMesh.material.uniforms.lightColor.value.copy(mainLight.color);
-    // 环境光
-    if (waterMesh.material.uniforms.ambientColor)
-        waterMesh.material.uniforms.ambientColor.value.set(document.getElementById('bottomColorPicker').value);
-    // 明暗
-    if (waterMesh.material.uniforms.brightness)
-        waterMesh.material.uniforms.brightness.value = globalBrightness;
-    // 阴影
-    if (waterMesh.material.uniforms.shadow)
-        waterMesh.material.uniforms.shadow.value = globalShadow;
-    // 相机位置
-    if (waterMesh.material.uniforms.cameraPosition)
-        waterMesh.material.uniforms.cameraPosition.value.copy(camera.position);
-
-    // 同步所有halfLambert材质的主光方向和主光颜色
-    if (mainLight) {
-        const dir = mainLight.position.clone().normalize();
-        const color = mainLight.color;
-        halfLambertMaterials.forEach(mat => {
-            if (mat.uniforms.lightDirection) mat.uniforms.lightDirection.value.copy(dir);
-            if (mat.uniforms.lightColor) mat.uniforms.lightColor.value.copy(color);
-            if (mat.uniforms.ambientColor) mat.uniforms.ambientColor.value.set(document.getElementById('bottomColorPicker').value);
-            if (mat.uniforms.brightness) mat.uniforms.brightness.value = globalBrightness;
-            if (mat.uniforms.shadow) mat.uniforms.shadow.value = globalShadow;
+        // 明暗滑杆，实时更新 mainLight 强度和所有halfLambert材质明暗
+        document.getElementById('brightnessSlider').addEventListener('input', e => {
+            globalBrightness = parseFloat(e.target.value);
+            if (mainLight) mainLight.intensity = 1.5 * globalBrightness;
+            if (skyMaterial) skyMaterial.uniforms.brightness.value = globalBrightness;
+            halfLambertMaterials.forEach(mat => {
+                if (mat.uniforms.brightness) mat.uniforms.brightness.value = globalBrightness;
+            });
+            updateWaterUniforms();
         });
-    }
-}
 
-// 每帧更新水面shader的相机位置（保证菲涅尔/反射正确）
-function updateWaterCameraUniform() {
-    if (waterMesh && waterMesh.material && waterMesh.material.uniforms && waterMesh.material.uniforms.cameraPosition) {
-        waterMesh.material.uniforms.cameraPosition.value.copy(camera.position);
-    }
-}
+        // 阴影滑杆，实时更新所有halfLambert材质的暗部uniform
+        document.getElementById('shadowSlider').addEventListener('input', e => {
+            globalShadow = parseFloat(e.target.value);
+            halfLambertMaterials.forEach(mat => {
+                if (mat.uniforms.shadow) mat.uniforms.shadow.value = globalShadow;
+            });
+            updateWaterUniforms();
+        });
 
-// 监听纹理缩放滑杆，实时同步 repeat
-document.getElementById('waterRepeatSlider').addEventListener('input', e => {
-    if (waterMesh && waterMesh.material && waterMesh.material.uniforms.repeat)
-        waterMesh.material.uniforms.repeat.value = parseFloat(e.target.value);
-});
+        // 监听天空中间颜色，实时更新天空球的中间色
+        document.getElementById('middleColorPicker').addEventListener('input', e => {
+            if (skyMaterial) skyMaterial.uniforms.middleColor.value.set(e.target.value);
+        });
 
-// 监听速度滑杆，实时同步 speed
-document.getElementById('waterSpeedSlider').addEventListener('input', e => {
-    if (waterMesh && waterMesh.material && waterMesh.material.uniforms.speed)
-        waterMesh.material.uniforms.speed.value = parseFloat(e.target.value);
-});
+        // 水面shader联动：主光、环境光、明暗、阴影、相机参数
+        function updateWaterUniforms() {
+            if (!waterMesh || !waterMesh.material || !waterMesh.material.uniforms) return;
+            // 主光
+            if (mainLight && waterMesh.material.uniforms.lightDirection)
+                waterMesh.material.uniforms.lightDirection.value.copy(mainLight.position.clone().normalize());
+            if (mainLight && waterMesh.material.uniforms.lightColor)
+                waterMesh.material.uniforms.lightColor.value.copy(mainLight.color);
+            // 环境光
+            if (waterMesh.material.uniforms.ambientColor)
+                waterMesh.material.uniforms.ambientColor.value.set(document.getElementById('bottomColorPicker').value);
+            // 明暗
+            if (waterMesh.material.uniforms.brightness)
+                waterMesh.material.uniforms.brightness.value = globalBrightness;
+            // 阴影
+            if (waterMesh.material.uniforms.shadow)
+                waterMesh.material.uniforms.shadow.value = globalShadow;
+            // 相机位置
+            if (waterMesh.material.uniforms.cameraPosition)
+                waterMesh.material.uniforms.cameraPosition.value.copy(camera.position);
 
-// ====== 全局滑杆UI显示和主光方向函数 ======
-function updateMainLightDirection() {
-    const sunDirXSlider = document.getElementById('sunDirXSlider');
-    const sunDirZSlider = document.getElementById('sunDirZSlider');
-    const sunDirXValue = document.getElementById('sunDirXValue');
-    const sunDirZValue = document.getElementById('sunDirZValue');
-    const xDeg = parseFloat(sunDirXSlider.value);
-    const zDeg = parseFloat(sunDirZSlider.value);
-    sunDirXValue.textContent = xDeg.toFixed(2);
-    sunDirZValue.textContent = zDeg.toFixed(2);
-    const xRad = xDeg * Math.PI / 180;
-    const zRad = zDeg * Math.PI / 180;
-    const y = Math.sin(xRad);
-    const x = Math.cos(xRad) * Math.sin(zRad);
-    const z = Math.cos(xRad) * Math.cos(zRad);
-    if (mainLight) {
-        mainLight.position.set(x * 50, y * 50, z * 50);
-        updateWaterUniforms && updateWaterUniforms();
-    }
-}
+            // 同步所有halfLambert材质的主光方向和主光颜色
+            if (mainLight) {
+                const dir = mainLight.position.clone().normalize();
+                const color = mainLight.color;
+                halfLambertMaterials.forEach(mat => {
+                    if (mat.uniforms.lightDirection) mat.uniforms.lightDirection.value.copy(dir);
+                    if (mat.uniforms.lightColor) mat.uniforms.lightColor.value.copy(color);
+                    if (mat.uniforms.ambientColor) mat.uniforms.ambientColor.value.set(document.getElementById('bottomColorPicker').value);
+                    if (mat.uniforms.brightness) mat.uniforms.brightness.value = globalBrightness;
+                    if (mat.uniforms.shadow) mat.uniforms.shadow.value = globalShadow;
+                });
+            }
+        }
+
+        // 每帧更新水面shader的相机位置（保证菲涅尔/反射正确）
+        function updateWaterCameraUniform() {
+            if (waterMesh && waterMesh.material && waterMesh.material.uniforms && waterMesh.material.uniforms.cameraPosition) {
+                waterMesh.material.uniforms.cameraPosition.value.copy(camera.position);
+            }
+        }
+
+        // 监听纹理缩放滑杆，实时同步 repeat
+        document.getElementById('waterRepeatSlider').addEventListener('input', e => {
+            if (waterMesh && waterMesh.material && waterMesh.material.uniforms.repeat)
+                waterMesh.material.uniforms.repeat.value = parseFloat(e.target.value);
+        });
+
+        // 监听速度滑杆，实时同步 speed
+        document.getElementById('waterSpeedSlider').addEventListener('input', e => {
+            if (waterMesh && waterMesh.material && waterMesh.material.uniforms.speed)
+                waterMesh.material.uniforms.speed.value = parseFloat(e.target.value);
+        });
+
+        // ====== 全局滑杆UI显示和主光方向函数 ======
+        function updateMainLightDirection() {
+            const sunDirXSlider = document.getElementById('sunDirXSlider');
+            const sunDirZSlider = document.getElementById('sunDirZSlider');
+            const sunDirXValue = document.getElementById('sunDirXValue');
+            const sunDirZValue = document.getElementById('sunDirZValue');
+            const xDeg = parseFloat(sunDirXSlider.value);
+            const zDeg = parseFloat(sunDirZSlider.value);
+            sunDirXValue.textContent = xDeg.toFixed(2);
+            sunDirZValue.textContent = zDeg.toFixed(2);
+            const xRad = xDeg * Math.PI / 180;
+            const zRad = zDeg * Math.PI / 180;
+            const y = Math.sin(xRad);
+            const x = Math.cos(xRad) * Math.sin(zRad);
+            const z = Math.cos(xRad) * Math.cos(zRad);
+            if (mainLight) {
+                mainLight.position.set(x * 50, y * 50, z * 50);
+                updateWaterUniforms && updateWaterUniforms();
+            }
+        }
+
+        const MAX_WAVES = 20; // 最多同时存在的波纹圈数
+        const waveCenters = Array(MAX_WAVES).fill().map(() => new THREE.Vector2(0, 0));
+        const waveStartTimes = Array(MAX_WAVES).fill(-10);
+        let lastClickTime = 0; // 上一次点击的时间戳（秒）
+        const CLICK_INTERVAL = 0.2; // 允许的最小点击间隔（秒）
+
+        // 鼠标点击事件，生成波纹
+        // 限制：1秒内只允许一次点击生效，且最多只能有MAX_WAVES个波纹
+        // 新波纹会复用已消失的槽位，所有波纹独立扩散
+        document.getElementById('canvas').addEventListener('pointerdown', function (e) {
+            const now = performance.now() * 0.001;
+            // 1. 限制点击间隔，1秒内只允许一次生效
+            if (now - lastClickTime < CLICK_INTERVAL) return;
+            lastClickTime = now;
+
+            // 2. 计算鼠标在canvas上的归一化坐标
+            const rect = this.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+            // 3. 射线投射，获取水面交点的uv
+            const mouse = new THREE.Vector2(x, y);
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(waterMesh);
+            if (intersects.length > 0) {
+                const uv = intersects[0].uv;
+                // 4. 查找可用槽位（已消失的波纹）
+                let slot = -1;
+                for (let i = 0; i < MAX_WAVES; i++) {
+                    if (now - waveStartTimes[i] > 1.5) { // 1.5秒后视为波纹消失
+                        slot = i;
+                        break;
+                    }
+                }
+                // 5. 如果没有可用槽位，则不添加新波纹（限制最大数量）
+                if (slot === -1) return;
+                // 6. 存入波纹数据
+                waveCenters[slot].copy(uv);
+                waveStartTimes[slot] = now;
+                // 7. 更新shader uniforms
+                waterMesh.material.uniforms.waveCenters.value = waveCenters;
+                waterMesh.material.uniforms.waveStartTimes.value = waveStartTimes;
+                waterMesh.material.uniforms.waveCount.value = MAX_WAVES;
+            }
+        });
     </script>
 </body>
 
