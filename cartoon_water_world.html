@@ -13,87 +13,72 @@
     <style>
         /* =================== 全局重置，确保无缝隙 =================== */
         html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-            box-sizing: border-box;
-            width: 100vw;
-            height: 100vh;
+            margin: 0 !important; /* 去除浏览器默认外边距 */
+            padding: 0 !important; /* 去除浏览器默认内边距 */
+            box-sizing: border-box; /* 让所有元素的宽高包含padding和border */
+            width: 100vw; /* 视口宽度 */
+            height: 100vh; /* 视口高度 */
         }
 
         body {
-            background: linear-gradient(135deg, #87a0c0 0%, #15263f 100%);
-            font-family: '微软雅黑', Arial, sans-serif;
-            overflow: hidden;
+            background: linear-gradient(135deg, #87a0c0 0%, #15263f 100%); /* 页面背景渐变色 */
+            font-family: '微软雅黑', Arial, sans-serif; /* 全局字体 */
+            overflow: hidden; /* 隐藏滚动条，保证全屏体验 */
         }
 
         #canvas {
-            display: block;
-            width: 100vw;
-            height: 100vh;
-            cursor: grab;
+            display: block; /* 让canvas独占一行 */
+            width: 100vw;   /* 全屏宽度 */
+            height: 100vh;  /* 全屏高度 */
+            /*cursor: grab;   /* 鼠标悬停时显示抓手 */
         }
         #canvas:active { cursor: grabbing; }
 
         /* =================== 设置面板 =================== */
         .settings-panel {
-            position: fixed;
-            top: 0; /* 贴紧顶部 */
-            left: 0; /* 贴紧左侧 */
-            right: auto;
-            margin: 0;
+            position: fixed;      /* 固定定位，始终贴在屏幕上 */
+            top: 0;              /* 贴紧顶部 */
+            left: 0;             /* 贴紧左侧 */
+            right: auto;         /* 禁止右侧定位 */
+            margin: 0;           /* 无外边距 */
             /* ====== 你可以手动调整以下参数 ====== */
-            width: 350px;      /* 面板宽度，建议300~420px之间 */
-            max-width: 95vw;   /* 最大宽度，防止超出屏幕 */
-            padding: 25px;     /* 面板内边距，建议15~30px */
-            font-size: 16px;   /* 面板基础字体大小，建议14~18px */
+            width: 420px;        /* 面板宽度，建议300~420px之间 */
+            max-width: 95vw;     /* 最大宽度，防止超出屏幕 */
+            padding: 25px;       /* 面板内边距，建议15~30px */
+            font-size: 16px;     /* 面板基础字体大小，建议14~18px */
             /* ====== 你可以手动调整以上参数 ====== */
-            height: auto;
-            max-height: 100vh; /* 超出时上下滚动 */
-            overflow-y: auto;
-            overflow-x: hidden;
-            box-sizing: border-box;
-            z-index: 1000;
-            background: linear-gradient(180deg,#2935a588 0%,#28679e86 100%);
-            color: #2d3436;
-            border-radius: 20px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-            border: 2px solid #7ea6e0;
+            height: auto;        /* 高度自适应内容 */
+            max-height: 100vh;   /* 超出时上下滚动 */
+            overflow-y: auto;    /* 只允许上下滚动 */
+            overflow-x: hidden;  /* 禁止左右滚动 */
+            box-sizing: border-box; /* 包含padding和border */
+            z-index: 1000;       /* 保证面板在最上层 */
+            background: linear-gradient(180deg,#2935a588 0%,#28679e86 100%); /* 面板背景渐变 */
+            color: #2d3436;      /* 面板文字颜色 */
+            border-radius: 10px; /* 圆角 */
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08); /* 阴影 */
+            border: 2px solid #7ea6e0; /* 边框颜色 */
         }
-
-        /* 优化设置面板滑杆对齐样式 */
+        /* 设置面板内的label、滑块、分组等样式 */
         .settings-panel label {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 15px;
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 8px; font-size: 15px;
         }
         .settings-panel input[type="range"] {
-            flex: 1 1 60%;
-            margin: 0 10px;
-            min-width: 80px;
-            max-width: 140px;
+            flex: 1 1 60%; margin: 0 10px; min-width: 80px; max-width: 140px;
         }
         .settings-panel span {
-            min-width: 90px;
-            text-align: left;
-            display: inline-block;
-            color: #252e53;
-            font-weight: bold;
+            min-width: 90px; text-align: left; display: inline-block; color: #252e53; font-weight: bold;
         }
         .settings-panel fieldset {
-            margin-bottom: 16px;
-            padding: 10px 12px 8px 12px;
+            margin-bottom: 16px; padding: 10px 12px 8px 12px;
         }
         .settings-panel legend {
-            font-size: 15px;
-            padding: 0 8px;
+            font-size: 15px; padding: 0 8px;
         }
         .settings-panel input[type="color"] { margin-right: 8px; }
         .settings-panel .slider-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
+            display: flex; align-items: center; margin-bottom: 8px;
         }
         .settings-panel .slider-row label { flex: 0 0 70px; margin: 0; }
         .settings-panel .slider-row input[type="range"] { flex: 1 1 60%; margin: 0 10px; }
@@ -102,69 +87,56 @@
         .settings-panel fieldset,
         .settings-panel label,
         .settings-panel .slider-row {
-            width: 100%;
-            box-sizing: border-box;
+            width: 100%; box-sizing: border-box;
         }
         .settings-panel input[type="range"] {
-            width: 70%;
-            min-width: 40px;
-            max-width: 95%;
+            width: 70%; min-width: 40px; max-width: 95%;
         }
-        /* 移除transform: scale相关媒体查询和JS缩放 */
-        /* 移除.controls-panel相关样式 */
-        .controls-panel { display: none !important; }
-        @media (max-width: 600px) {
-            .settings-panel {
-                width: 98vw;
-                max-width: none;
-                min-width: 0;
-                left: 0;
-                top: 0;
-                font-size: 13px;
-                padding: 6px;
-            }
-        }
-        @media (max-width: 900px) and (orientation: landscape) {
-            .settings-panel {
-                width: 60vw;
-                max-width: none;
-                min-width: 0;
-                left: 0;
-                top: 0;
-                font-size: 12px;
-                padding: 4px;
-            }
-        }
+
+        /* =================== 加载进度条相关 =================== */
         .progress-container {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            z-index: 2000;
+            position: fixed; /* 固定居中 */
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; z-index: 2000;
         }
         .progress-text {
-            color: #ff7fff;
-            font-size: 24px;      /* 你可以自定义加载文字大小 */
+            color: #ff7fff; /* 加载文字颜色，可自定义 */
+            font-size: 24px; /* 加载文字大小，可自定义 */
             font-weight: bold;
             margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(54, 24, 40, 0.8);
+            text-shadow: 2px 2px 4px rgba(54, 24, 40, 0.8); /* 文字阴影，可自定义 */
         }
         .progress-bar {
-            width: 600px;         /* 你可以自定义进度条宽度 */
-            height: 8px;         /* 你可以自定义进度条高度 */
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 6px;
+            width: 600px;  /* 进度条宽度，可自定义 */
+            height: 8px;   /* 进度条高度，可自定义 */
+            background: rgba(255, 255, 255, 0.5); /* 进度条底色 */
+            border-radius: 6px; /* 圆角 */
             overflow: hidden;
-            border: 2px solid #fd79a8;
+            border: 2px solid #fd79a8; /* 边框颜色 */
             margin: 0 auto;
         }
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #fd79a8, #fdcb6e);
-            width: 0%;
-            transition: width 0.5s ease;
+            background: linear-gradient(90deg, #fd79a8, #fdcb6e); /* 渐变色，可自定义 */
+            width: 0%; /* 由JS动态控制 */
+            transition: width 0.5s ease; /* 平滑动画 */
             border-radius: 4px;
+        }
+
+        /* =================== 响应式适配（手机端） =================== */
+        @media (max-width: 600px) {
+            .settings-panel {
+                width: 98vw; max-width: none; min-width: 0; left: 0; top: 0;
+                font-size: 13px; padding: 6px;
+            }
+            .progress-bar { width: 90vw; }
+        }
+        @media (max-width: 900px) and (orientation: landscape) {
+            .settings-panel {
+                width: 60vw; max-width: none; min-width: 0; left: 0; top: 0;
+                font-size: 12px; padding: 4px;
+            }
+            .progress-bar { width: 60vw; }
         }
     </style>
 </head>
