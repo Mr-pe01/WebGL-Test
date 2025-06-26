@@ -993,6 +993,17 @@
                 waterMesh.material.uniforms.waveCount.value = MAX_WAVES;
             }
         });
+
+        function resizeSettingsPanel() {
+            const panel = document.querySelector('.settings-panel');
+            if (!panel) return;
+            const scaleW = window.innerWidth * 0.6 / 350; // 350是面板原始宽度
+            const scaleH = window.innerHeight * 0.6 / panel.offsetHeight;
+            const scale = Math.min(scaleW, scaleH, 1);
+            panel.style.transform = `scale(${scale})`;
+        }
+        window.addEventListener('resize', resizeSettingsPanel);
+        window.addEventListener('load', resizeSettingsPanel);
     </script>
 </body>
 
