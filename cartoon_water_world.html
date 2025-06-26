@@ -191,10 +191,10 @@
         /* 设置面板自适应宽度和滚动 */
         .settings-panel {
             position: fixed;
-            left: 0;
-            top: 0;
-            width: 90vw;
-            max-width: 420px;
+            right: 0;   /* 贴紧右侧 */
+            top: 0;     /* 贴紧顶部 */
+            width: 350px;      /* 你想要的固定宽度 */
+            max-width: 95vw;   /* 防止超出屏幕 */
             height: 100vh;
             max-height: 100vh;
             overflow-y: auto;
@@ -278,6 +278,19 @@
                 height: 100vh;
                 max-height: 100vh;
             }
+        }
+
+        .settings-panel fieldset,
+        .settings-panel label,
+        .settings-panel .slider-row {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .settings-panel input[type="range"] {
+            width: 70%;
+            min-width: 40px;
+            max-width: 95%;
         }
     </style>
 </head>
@@ -410,15 +423,6 @@
             </div>
         </fieldset>
 
-    </div>
-
-    <!-- 控制说明 -->
-    <div class="controls-panel">
-        <strong>🎮 鼠标控制:</strong><br>
-        ——————————<br>
-        🖱️ 滚轮滚动 = 缩放远近<br>
-        🖱️ 左键拖拽 = 旋转视角<br>
-        🖱️ 中键拖拽 = 平移画面<br>
     </div>
 
     <!-- 加载进度 -->
