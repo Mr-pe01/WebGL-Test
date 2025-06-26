@@ -49,43 +49,43 @@ vec3 disturbedNormalTangent = blendNormal(n1, n2);
 disturbedNormalTangent.xy *= waterNormalStrength;
 
 // ===================== 波纹法线贴图叠加 =====================
-// for (int i = 0; i < MAX_WAVES; i++) {
-//     if (i >= waveCount) break; // 只处理实际存在的波
-//     float t = time - waveStartTimes[i]; // 当前波纹已过去的时间
-//     float duration = 1.5; // 每个波纹的生命周期
-//     if (t > 0.0 && t < duration) {
-//         // ----------- 伪随机参数生成 -----------
-//         // 每个波纹的扩散速度（0.08~0.16之间随机）
-//         float speed = mix(0.08, 0.16, rand(float(i)));
-//         // 每个波纹的最大半径（0.2~0.5之间随机）
-//         float maxRadius = mix(0.2, 0.5, rand2(waveCenters[i]));
+for (int i = 0; i < MAX_WAVES; i++) {
+    if (i >= waveCount) break; // 只处理实际存在的波
+    float t = time - waveStartTimes[i]; // 当前波纹已过去的时间
+    float duration = 1.5; // 每个波纹的生命周期
+    if (t > 0.0 && t < duration) {
+        // ----------- 伪随机参数生成 -----------
+        // 每个波纹的扩散速度（0.08~0.16之间随机）
+        float speed = mix(0.08, 0.16, rand(float(i)));
+        // 每个波纹的最大半径（0.2~0.5之间随机）
+        float maxRadius = mix(0.2, 0.5, rand2(waveCenters[i]));
 
-//         // ----------- 扩散半径计算（ease-out） -----------
-//         // 让波纹扩散由快到慢：
-//         // ease = 1-(1-t/duration)^2，t越大增长越慢
-//         float ease = 1.0 - pow(1.0 - (t * speed) / duration, 2.0);
-//         // 当前半径 = ease * maxRadius
-//         float radius = ease * maxRadius;
+        // ----------- 扩散半径计算（ease-out） -----------
+        // 让波纹扩散由快到慢：
+        // ease = 1-(1-t/duration)^2，t越大增长越慢
+        float ease = 1.0 - pow(1.0 - (t * speed) / duration, 2.0);
+        // 当前半径 = ease * maxRadius
+        float radius = ease * maxRadius;
 
-//         // 控制圈的粗细（数值越大圈越宽）
-//         float ringUvScale = 0.01;
+        // 控制圈的粗细（数值越大圈越宽）
+        float ringUvScale = 0.01;
 
-//         // ----------- 计算采样UV -----------
-//         // 将vUv映射到以waveCenters[i]为中心、半径为radius的圆环区域
-//         // 这样ringNormalMap采样到的就是一圈波纹
-//         vec2 ringUv = (vUv - waveCenters[i]) / (radius + ringUvScale) + 0.5;
+        // ----------- 计算采样UV -----------
+        // 将vUv映射到以waveCenters[i]为中心、半径为radius的圆环区域
+        // 这样ringNormalMap采样到的就是一圈波纹
+        vec2 ringUv = (vUv - waveCenters[i]) / (radius + ringUvScale) + 0.5;
 
-//         // 只在圈附近采样，超出[0,1]范围不采样，避免贴图越界
-//         if (all(greaterThanEqual(ringUv, vec2(0.0))) && all(lessThanEqual(ringUv, vec2(1.0)))) {
-//             // 采样圈法线贴图，得到扰动法线
-//             vec3 ringNormal = texture2D(ringNormalMap, ringUv).xyz * 2.0 - 1.0;
-//             // 波纹随时间淡出，t越大fade越小
-//             float fade = 1.0 - t / duration;
-//             // 混合扰动法线和圈法线，fade控制影响强度
-//             disturbedNormalTangent = blendNormal(disturbedNormalTangent, mix(vec3(0,0,1), ringNormal, fade));
-//         }
-//     }
-// }
+        // 只在圈附近采样，超出[0,1]范围不采样，避免贴图越界
+        if (all(greaterThanEqual(ringUv, vec2(0.0))) && all(lessThanEqual(ringUv, vec2(1.0)))) {
+            // 采样圈法线贴图，得到扰动法线
+            vec3 ringNormal = texture2D(ringNormalMap, ringUv).xyz * 2.0 - 1.0;
+            // 波纹随时间淡出，t越大fade越小
+            float fade = 1.0 - t / duration;
+            // 混合扰动法线和圈法线，fade控制影响强度
+            disturbedNormalTangent = blendNormal(disturbedNormalTangent, mix(vec3(0,0,1), ringNormal, fade));
+        }
+    }
+}
 // ===================== 波纹叠加结束 =====================
 
 // 用TBN变换到世界空间
