@@ -34,42 +34,81 @@
         }
         #canvas:active { cursor: grabbing; }
 
-        /* =================== 设置面板 =================== */
+        /* =================== 设置面板外层容器 =================== */
         .settings-panel {
             position: fixed;
-            top: 16px;           /* 贴边间距 */
-            left: 16px;
-            right: auto;         /* 禁止右侧定位 */
-            margin: 0;           /* 无外边距 */
-            /* ====== 你可以手动调整以下参数 ====== */
-            width: 360px;        /* 面板宽度，建议300~420px之间 */
-            max-width: 95vw;     /* 最大宽度，防止超出屏幕 */
-            padding: 16px;       /* 面板内边距，决定所有内容距离外框的间距 */
-            font-size: 16px;     /* 面板基础字体大小，建议14~18px */
-            /* ====== 你可以手动调整以上参数 ====== */
-            height: 600px;        /* 高度自适应内容（关键：防止外框出现滚动条） */
-            max-height: 100vh;   /* 超出时上下滚动 */
-            overflow-y: visible; /* 外框不出现滚动条，内容区可滚动 */
-            overflow-x: hidden;  /* 禁止左右滚动 */
-            box-sizing: border-box; /* 包含padding和border */
-            z-index: 1000;       /* 保证面板在最上层 */
-            background: linear-gradient(180deg,#2935a588 0%,#28679e86 100%); /* 面板背景渐变 */
-            color: #2d3436;      /* 面板文字颜色 */
-            border-radius: 10px; /* 圆角 */
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08); /* 阴影 */
-            border: 2px solid #7ea6e0; /* 边框颜色 */
+            top: 16px; left: 16px;
+            z-index: 1000;
+            background: none;
+            border: none;
+            box-shadow: none;
+            width: auto;
+            height: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: auto;
         }
-        .settings-panel-content {
+        /* =================== 场景设置按钮独立包围框 =================== */
+        .settings-panel-header {
+            background: linear-gradient(180deg,#2935a588 0%,#28679e86 100%);
+            border: 2px solid #7ea6e0;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            width: 240px; /* 按钮宽度 */
+            height: 56px; /* 按钮高度 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0;
+            transition: width 0.2s;
+        }
+        .settings-toggle-btn {
+            width: 100%;
             height: 100%;
-            max-height: 100%;
-            overflow-y: auto;      /* 允许内容区滚动 */
+            background: none;
+            border: none;
+            color: #252e53;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            padding: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            user-select: none;
+        }
+        /* =================== 展开时按钮区宽度扩展 =================== */
+        .settings-panel.expanded .settings-panel-header {
+            width: 360px; /* 与内容区宽度一致 */
+            transition: width 0.2s;
+        }
+        /* =================== 内容区独立包围框 =================== */
+        .settings-panel-content {
+            display: none;
+            margin-top: 8px; /* 按钮区和内容区间隔 */
+            background: linear-gradient(180deg,#2935a588 0%,#28679e86 100%);
+            border: 2px solid #7ea6e0;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            width: 360px;
+            height: 536px; /* 600-按钮高度-间隔 */
+            box-sizing: border-box;
+            overflow-y: auto; /* 只允许内容区滚动 */
             overflow-x: hidden;
             /* 隐藏滚动条，兼容主流浏览器 */
             scrollbar-width: none; /* Firefox */
             -ms-overflow-style: none; /* IE/Edge */
+            padding: 16px;
+            transition: width 0.2s;
         }
         .settings-panel-content::-webkit-scrollbar {
             display: none; /* Chrome/Safari/Webkit */
+        }
+        .settings-panel.expanded .settings-panel-content {
+            display: block;
         }
         /* =================== 规范 label 结构和自适应布局 =================== */
         .settings-panel label {
@@ -222,32 +261,32 @@
 
 <body>
     <!-- =================== 设置面板 =================== -->
-    <div class="settings-panel">
-        <div class="settings-panel-content">
-            <h2 style="color:#252e53;margin-bottom:18px;font-size:20px;">⚙️ 场景设置</h2>
-
-            <!-- ===== 天空颜色分组（fieldset包围，两个拾色器并排） ===== -->
+    <div class="settings-panel" id="settingsPanel">
+        <!-- =================== 顶部按钮区（始终有独立包围框） =================== -->
+        <div class="settings-panel-header">
+            <button id="toggleSettingsPanel" class="settings-toggle-btn">
+                <span style="font-size:22px;">⚙️</span> 场景设置
+            </button>
+        </div>
+        <!-- =================== 可折叠的设置内容区（独立包围框） =================== -->
+        <div class="settings-panel-content" id="settingsPanelContent">
+            <!-- ===== 天空颜色分组 ===== -->
             <fieldset class="fieldset-sky">
                 <legend>🌌 <天 空></legend>
-                <!-- 用flex让两个拾色器居中且间距适中 -->
                 <div style="display: flex; justify-content: center; align-items: center; gap: 24px;">
-                    <!-- 天空中间颜色拾色器 -->
                     <input type="color" id="middleColorPicker" value="#3789E1"
                         style="width:36px;height:36px;border:none;background:none;cursor:pointer;">
-                    <!-- 天空底部颜色拾色器 -->
                     <input type="color" id="bottomColorPicker" value="#ABDEF7"
                         style="width:36px;height:36px;border:none;background:none;cursor:pointer;">
                 </div>
             </fieldset>
-
-            <!-- ===== 阳光颜色设置（分组） ===== -->
+            <!-- ===== 阳光颜色设置 ===== -->
             <fieldset class="fieldset-sun">
                 <legend>☀️ <阳 光></legend>
                 <div style="display: flex; justify-content: center; align-items: center; gap: 24px;">
                     <input type="color" id="sunColorPicker" value="#FFE4B5"
                         style="vertical-align:middle;width:36px;height:36px;border:none;background:none;cursor:pointer;">
                 </div>
-                <!-- ========== ☀️ 阳光方向控制 ========== -->
                 <div style="margin-top:10px;">
                     <label>
                         <span class="label-name">方 向 X</span>
@@ -265,7 +304,6 @@
                     </label>
                 </div>
             </fieldset>
-
             <!-- ===== 水面法线贴图参数分组 ===== -->
             <fieldset class="fieldset-water">
                 <legend>🌊 <水 面></legend>
@@ -293,7 +331,6 @@
                         <span class="label-value" id="waterSpeedValue">0.06</span>
                     </label>
                 </div>
-                <!-- 高光和菲尼尔参数合并到水面分组 -->
                 <div style="margin-top:10px;">
                     <label>
                         <span class="label-name">高光范围</span><input
@@ -321,7 +358,6 @@
                             class="label-value" id="waterFresnelStrengthValue">0.4</span></label>
                 </div>
             </fieldset>
-
             <!-- ===== 光照调节分组（阴影+明暗） ===== -->
             <fieldset class="fieldset-light">
                 <legend>💡 光照调节</legend>
@@ -932,6 +968,27 @@
                 waterMesh.material.uniforms.waveStartTimes.value = waveStartTimes;
                 waterMesh.material.uniforms.waveCount.value = MAX_WAVES;
             }
+        });
+
+        // ========== 设置面板展开/折叠功能 ==========
+        // 获取按钮和面板DOM
+        const toggleBtn = document.getElementById('toggleSettingsPanel');
+        const panel = document.getElementById('settingsPanel');
+        const panelContent = document.getElementById('settingsPanelContent');
+        // 点击按钮切换 expanded class
+        toggleBtn.addEventListener('click', function() {
+            panel.classList.toggle('expanded');
+            // 同步内容区显示/隐藏
+            if(panel.classList.contains('expanded')){
+                panelContent.style.display = 'block';
+            }else{
+                panelContent.style.display = 'none';
+            }
+        });
+        // 页面加载后默认收起
+        window.addEventListener('DOMContentLoaded', function() {
+            panel.classList.remove('expanded');
+            panelContent.style.display = 'none';
         });
     </script>
 </body>
