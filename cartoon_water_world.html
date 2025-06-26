@@ -37,7 +37,8 @@
         /* =================== 设置面板外层容器 =================== */
         .settings-panel {
             position: fixed;
-            top: 16px; left: 16px;
+            top: 0; /* 顶部贴边 */
+            left: 0; /* 左侧贴边 */
             z-index: 1000;
             background: none;
             border: none;
@@ -60,7 +61,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 0;
+            margin: 0; /* 去除外边距，紧贴左上角 */
             transition: width 0.2s;
         }
         .settings-toggle-btn {
@@ -87,8 +88,12 @@
         }
         /* =================== 内容区独立包围框 =================== */
         .settings-panel-content {
-            display: none;
-            margin-top: 8px; /* 按钮区和内容区间隔 */
+            max-height: 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: max-height 0.3s cubic-bezier(.4,0,.2,1), opacity 0.2s;
+            overflow: hidden;
+            margin-top: 8px;
             background: linear-gradient(180deg,#2935a588 0%,#28679e86 100%);
             border: 2px solid #7ea6e0;
             border-radius: 10px;
@@ -102,13 +107,14 @@
             scrollbar-width: none; /* Firefox */
             -ms-overflow-style: none; /* IE/Edge */
             padding: 16px;
-            transition: width 0.2s;
         }
         .settings-panel-content::-webkit-scrollbar {
             display: none; /* Chrome/Safari/Webkit */
         }
         .settings-panel.expanded .settings-panel-content {
-            display: block;
+            max-height: 1000px; /* 足够大即可 */
+            opacity: 1;
+            pointer-events: auto;
         }
         /* =================== 规范 label 结构和自适应布局 =================== */
         .settings-panel label {
@@ -978,17 +984,6 @@
         // 点击按钮切换 expanded class
         toggleBtn.addEventListener('click', function() {
             panel.classList.toggle('expanded');
-            // 同步内容区显示/隐藏
-            if(panel.classList.contains('expanded')){
-                panelContent.style.display = 'block';
-            }else{
-                panelContent.style.display = 'none';
-            }
-        });
-        // 页面加载后默认收起
-        window.addEventListener('DOMContentLoaded', function() {
-            panel.classList.remove('expanded');
-            panelContent.style.display = 'none';
         });
     </script>
 </body>
