@@ -36,20 +36,20 @@
 
         /* =================== 设置面板 =================== */
         .settings-panel {
-            position: fixed;      /* 固定定位，始终贴在屏幕上 */
-            top: 0;              /* 贴紧顶部 */
-            left: 0;             /* 贴紧左侧 */
+            position: fixed;
+            top: 16px;           /* 贴边间距 */
+            left: 16px;
             right: auto;         /* 禁止右侧定位 */
             margin: 0;           /* 无外边距 */
             /* ====== 你可以手动调整以下参数 ====== */
-            width: 420px;        /* 面板宽度，建议300~420px之间 */
+            width: 360px;        /* 面板宽度，建议300~420px之间 */
             max-width: 95vw;     /* 最大宽度，防止超出屏幕 */
-            padding: 25px;       /* 面板内边距，建议15~30px */
+            padding: 16px;       /* 面板内边距，决定所有内容距离外框的间距 */
             font-size: 16px;     /* 面板基础字体大小，建议14~18px */
             /* ====== 你可以手动调整以上参数 ====== */
-            height: auto;        /* 高度自适应内容 */
+            height: 600px;        /* 高度自适应内容（关键：防止外框出现滚动条） */
             max-height: 100vh;   /* 超出时上下滚动 */
-            overflow-y: auto;    /* 只允许上下滚动 */
+            overflow-y: visible; /* 外框不出现滚动条，内容区可滚动 */
             overflow-x: hidden;  /* 禁止左右滚动 */
             box-sizing: border-box; /* 包含padding和border */
             z-index: 1000;       /* 保证面板在最上层 */
@@ -59,23 +59,102 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.08); /* 阴影 */
             border: 2px solid #7ea6e0; /* 边框颜色 */
         }
-        /* 设置面板内的label、滑块、分组等样式 */
+        .settings-panel-content {
+            height: 100%;
+            max-height: 100%;
+            overflow-y: auto;      /* 允许内容区滚动 */
+            overflow-x: hidden;
+            /* 隐藏滚动条，兼容主流浏览器 */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+        }
+        .settings-panel-content::-webkit-scrollbar {
+            display: none; /* Chrome/Safari/Webkit */
+        }
+        /* =================== 规范 label 结构和自适应布局 =================== */
         .settings-panel label {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 8px; font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 15px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .settings-panel .label-name {
+            flex: 0 0 90px;      /* 固定宽度或最小宽度 */
+            max-width: 120px;    /* 防止名字太长撑爆 */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         .settings-panel input[type="range"] {
-            flex: 1 1 60%; margin: 0 10px; min-width: 80px; max-width: 140px;
+            flex: 1 1 60%;
+            min-width: 60px;
+            max-width: 140px;
+            margin: 0 10px;
         }
-        .settings-panel span {
-            min-width: 90px; text-align: left; display: inline-block; color: #252e53; font-weight: bold;
+        .settings-panel .label-value {
+            flex: 0 0 40px;
+            max-width: 50px;
+            text-align: right;
         }
+        /* =================== 设置面板分组（fieldset）自适应及分组风格 =================== */
         .settings-panel fieldset {
-            margin-bottom: 16px; padding: 10px 12px 8px 12px;
+            margin: 0 0 18px 0; /* 只保留下间距，左右无间距 */
+            padding: 12px 10px 10px 10px; /* 分组内边距 */
+            border-radius: 8px;
+            background: rgba(255,255,255,0.06);
+            box-sizing: border-box;
+            width: 100%; /* 关键：分组宽度自适应外框 */
+            max-width: none;
+            border: 1.5px solid #8fc4f7; /* 默认边框色，可被下方覆盖 */
+        }
+        /* ====== 分组：天空 ====== */
+        .settings-panel .fieldset-sky {
+            border-color: #8fc4f7; /* 线框颜色 */
+        }
+        .settings-panel .fieldset-sky legend {
+            color: #3498db; /* 标题颜色 */
+        }
+        .settings-panel .fieldset-sky label span {
+            color: #3498db; /* UI名字颜色 */
+        }
+        /* ====== 分组：阳光 ====== */
+        .settings-panel .fieldset-sun {
+            border-color: #f7c873;
+        }
+        .settings-panel .fieldset-sun legend {
+            color: #f7c873;
+        }
+        .settings-panel .fieldset-sun label span {
+            color: #f7c873;
+        }
+        /* ====== 分组：水面 ====== */
+        .settings-panel .fieldset-water {
+            border-color: #4ecdc4;
+        }
+        .settings-panel .fieldset-water legend {
+            color: #4ecdc4;
+        }
+        .settings-panel .fieldset-water label span {
+            color: #4ecdc4;
+        }
+        /* ====== 分组：光照调节 ====== */
+        .settings-panel .fieldset-light {
+            border-color: #1D2649;
+        }
+        .settings-panel .fieldset-light legend {
+            color: #1D2649;
+        }
+        .settings-panel .fieldset-light label span {
+            color: #1D2649;
         }
         .settings-panel legend {
             font-size: 15px; padding: 0 8px;
+            font-weight: bold;
         }
+        /* 设置面板内的label、滑块、分组等样式 */
         .settings-panel input[type="color"] { margin-right: 8px; }
         .settings-panel .slider-row {
             display: flex; align-items: center; margin-bottom: 8px;
@@ -144,129 +223,126 @@
 <body>
     <!-- =================== 设置面板 =================== -->
     <div class="settings-panel">
-        <h2 style="color:#252e53;margin-bottom:18px;font-size:20px;">⚙️ 场景设置</h2>
+        <div class="settings-panel-content">
+            <h2 style="color:#252e53;margin-bottom:18px;font-size:20px;">⚙️ 场景设置</h2>
 
-        <!-- ===== 天空颜色分组（fieldset包围，两个拾色器并排） ===== -->
-        <fieldset style="border:1.5px solid #8fc4f7;border-radius:8px;padding:10px 12px 8px 12px;margin-bottom:18px;">
-            <legend style="font-weight:bold;color:#8fc4f7;padding:0 8px;">🌌 <天 空>
-            </legend>
-            <!-- 用flex让两个拾色器居中且间距适中 -->
-            <div style="display: flex; justify-content: center; align-items: center; gap: 24px;">
-                <!-- 天空中间颜色拾色器 -->
-                <input type="color" id="middleColorPicker" value="#3789E1"
-                    style="width:36px;height:36px;border:none;background:none;cursor:pointer;">
-                <!-- 天空底部颜色拾色器 -->
-                <input type="color" id="bottomColorPicker" value="#ABDEF7"
-                    style="width:36px;height:36px;border:none;background:none;cursor:pointer;">
-            </div>
-        </fieldset>
+            <!-- ===== 天空颜色分组（fieldset包围，两个拾色器并排） ===== -->
+            <fieldset class="fieldset-sky">
+                <legend>🌌 <天 空></legend>
+                <!-- 用flex让两个拾色器居中且间距适中 -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 24px;">
+                    <!-- 天空中间颜色拾色器 -->
+                    <input type="color" id="middleColorPicker" value="#3789E1"
+                        style="width:36px;height:36px;border:none;background:none;cursor:pointer;">
+                    <!-- 天空底部颜色拾色器 -->
+                    <input type="color" id="bottomColorPicker" value="#ABDEF7"
+                        style="width:36px;height:36px;border:none;background:none;cursor:pointer;">
+                </div>
+            </fieldset>
 
-        <!-- ===== 阳光颜色设置（分组） ===== -->
-        <fieldset style="border:1.5px solid #f7c873;border-radius:8px;padding:10px 12px 8px 12px;margin-bottom:18px;">
-            <legend style="font-weight:bold;color:#f7c873;padding:0 8px;">☀️ <阳 光>
-            </legend>
-            <div style="display: flex; justify-content: center; align-items: center; gap: 24px;">
-                <input type="color" id="sunColorPicker" value="#FFE4B5"
-                    style="vertical-align:middle;width:36px;height:36px;border:none;background:none;cursor:pointer;">
-            </div>
+            <!-- ===== 阳光颜色设置（分组） ===== -->
+            <fieldset class="fieldset-sun">
+                <legend>☀️ <阳 光></legend>
+                <div style="display: flex; justify-content: center; align-items: center; gap: 24px;">
+                    <input type="color" id="sunColorPicker" value="#FFE4B5"
+                        style="vertical-align:middle;width:36px;height:36px;border:none;background:none;cursor:pointer;">
+                </div>
+                <!-- ========== ☀️ 阳光方向控制 ========== -->
+                <div style="margin-top:10px;">
+                    <label>
+                        <span class="label-name">方 向 X</span>
+                        <input type="range" id="sunDirXSlider" min="-90" max="90" step="1" value="45"
+                            style="vertical-align:middle;width:120px;">
+                        <span class="label-value" id="sunDirXValue">45</span>°
+                    </label>
+                </div>
+                <div style="margin-top:6px;">
+                    <label>
+                        <span class="label-name">方 向 Y</span>
+                        <input type="range" id="sunDirZSlider" min="-180" max="180" step="1" value="180"
+                            style="vertical-align:middle;width:120px;">
+                        <span class="label-value" id="sunDirZValue">45</span>°
+                    </label>
+                </div>
+            </fieldset>
 
-            <!-- ========== ☀️ 阳光方向控制 ========== -->
-            <div style="margin-top:10px;">
-                <label>
-                    <span style="font-weight:bold;color:#f7c873;margin-right:8px;">方 向 X</span>
-                    <input type="range" id="sunDirXSlider" min="-90" max="90" step="1" value="45"
-                        style="vertical-align:middle;width:120px;">
-                    <span id="sunDirXValue">45</span>°
-                </label>
-            </div>
-            <div style="margin-top:6px;">
-                <label>
-                    <span style="font-weight:bold;color:#f7c873;margin-right:8px;">方 向 Y</span>
-                    <input type="range" id="sunDirZSlider" min="-180" max="180" step="1" value="180"
-                        style="vertical-align:middle;width:120px;">
-                    <span id="sunDirZValue">45</span>°
-                </label>
-            </div>
-        </fieldset>
+            <!-- ===== 水面法线贴图参数分组 ===== -->
+            <fieldset class="fieldset-water">
+                <legend>🌊 <水 面></legend>
+                <div style="margin-bottom:10px;">
+                    <label>
+                        <span class="label-name">纹理缩放</span>
+                        <input type="range" id="waterRepeatSlider" min="1" max="100" step="0.1" value="50"
+                            style="vertical-align:middle;width:120px;">
+                        <span class="label-value" id="waterRepeatValue">3.00</span>
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        <span class="label-name">纹理强度</span>
+                        <input type="range" id="waterNormalStrengthSlider" min="0" max="1" step="0.01" value="0.2"
+                            style="vertical-align:middle;width:120px;">
+                        <span class="label-value" id="waterNormalStrengthValue">0.20</span>
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        <span class="label-name">水流速度</span>
+                        <input type="range" id="waterSpeedSlider" min="0.01" max="1" step="0.001" value="0.06"
+                            style="vertical-align:middle;width:120px;">
+                        <span class="label-value" id="waterSpeedValue">0.06</span>
+                    </label>
+                </div>
+                <!-- 高光和菲尼尔参数合并到水面分组 -->
+                <div style="margin-top:10px;">
+                    <label>
+                        <span class="label-name">高光范围</span><input
+                            id="waterSpecularThresholdSlider" type="range" min="0" max="1.0" step="0.01" value="0.1"><span
+                            class="label-value" id="waterSpecularThresholdValue">0.1</span>
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        <span class="label-name">高光强度</span><input
+                            id="waterSpecularStrengthSlider" type="range" min="0.0" max="1.0" step="0.01" value="0.5"><span
+                            class="label-value" id="waterSpecularStrengthValue">0.5</span>
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        <span class="label-name">菲尼尔范围</span><input
+                            id="waterFresnelPowerSlider" type="range" min="1.0" max="5.0" step="0.01" value="3.0"><span
+                            class="label-value" id="waterFresnelPowerValue">2.5</span></label>
+                </div>
+                <div>
+                    <label>
+                        <span class="label-name">菲尼尔强度</span><input
+                            id="waterFresnelStrengthSlider" type="range" min="0.0" max="1.0" step="0.01" value="0.18"><span
+                            class="label-value" id="waterFresnelStrengthValue">0.4</span></label>
+                </div>
+            </fieldset>
 
-        <!-- ===== 水面法线贴图参数分组 ===== -->
-        <fieldset style="border:1.5px solid #4ecdc4;border-radius:8px;padding:10px 12px 8px 12px;margin-bottom:18px;">
-            <legend style="font-weight:bold;color:#4ecdc4;padding:0 8px;">🌊 <水 面>
-            </legend>
-            <div style="margin-bottom:10px;">
-                <label>
-                    <span style="font-weight:bold;color:#4ecdc4;margin-right:8px;">纹理缩放</span>
-                    <input type="range" id="waterRepeatSlider" min="1" max="50" step="0.1" value="20"
-                        style="vertical-align:middle;width:120px;">
-                    <span id="waterRepeatValue">3.00</span>
-                </label>
-            </div>
-            <div>
-                <label>
-                    <span style="font-weight:bold;color:#4ecdc4;margin-right:8px;">纹理强度</span>
-                    <input type="range" id="waterNormalStrengthSlider" min="0" max="1" step="0.01" value="0.2"
-                        style="vertical-align:middle;width:120px;">
-                    <span id="waterNormalStrengthValue">0.20</span>
-                </label>
-            </div>
-            <div>
-                <label>
-                    <span style="font-weight:bold;color:#4ecdc4;margin-right:8px;">水流速度</span>
-                    <input type="range" id="waterSpeedSlider" min="0.01" max="0.2" step="0.01" value="0.06"
-                        style="vertical-align:middle;width:120px;">
-                    <span id="waterSpeedValue">0.06</span>
-                </label>
-            </div>
-            <!-- 高光和菲尼尔参数合并到水面分组 -->
-            <div style="margin-top:10px;">
-                <label>
-                    <span style="font-weight:bold;color:#4ecdc4;margin-right:8px;">高光范围</span><input
-                        id="waterSpecularThresholdSlider" type="range" min="0" max="1.0" step="0.01" value="0.1"><span
-                        id="waterSpecularThresholdValue">0.1</span>
-                </label>
-            </div>
-            <div>
-                <label>
-                    <span style="font-weight:bold;color:#4ecdc4;margin-right:8px;">高光强度</span><input
-                        id="waterSpecularStrengthSlider" type="range" min="0.0" max="1.0" step="0.01" value="0.5"><span
-                        id="waterSpecularStrengthValue">0.5</span>
-                </label>
-            </div>
-            <div>
-                <label>
-                    <span style="font-weight:bold;color:#4ecdc4;margin-right:8px;">菲尼尔范围</span><input
-                        id="waterFresnelPowerSlider" type="range" min="1.0" max="5.0" step="0.01" value="3.0"><span
-                        id="waterFresnelPowerValue">2.5</span></label>
-            </div>
-            <div>
-                <label>
-                    <span style="font-weight:bold;color:#4ecdc4;margin-right:8px;">菲尼尔强度</span><input
-                        id="waterFresnelStrengthSlider" type="range" min="0.0" max="1.0" step="0.01" value="0.18"><span
-                        id="waterFresnelStrengthValue">0.4</span></label>
-            </div>
-        </fieldset>
-
-        <!-- ===== 光照调节分组（阴影+明暗） ===== -->
-        <fieldset style="border:1.5px solid #1D2649;border-radius:8px;padding:10px 12px 8px 12px;margin-bottom:18px;">
-            <legend style="font-weight:bold;color:#1D2649;padding:0 8px;">💡 光照调节</legend>
-            <div style="margin-bottom:10px;">
-                <label>
-                    <span style="font-weight:bold;color:#1D2649;margin-right:8px;">阴 影</span>
-                    <input type="range" id="shadowSlider" min="0" max="1" step="0.01" value="0.6"
-                        style="vertical-align:middle;width:120px;">
-                    <span id="shadowValue">0.60</span>
-                </label>
-            </div>
-            <div>
-                <label>
-                    <span style="font-weight:bold;color:#1D2649;margin-right:8px;">明 暗</span>
-                    <input type="range" id="brightnessSlider" min="0.01" max="1" step="0.01" value="0.7"
-                        style="vertical-align:middle;width:120px;">
-                    <span id="brightnessValue">0.70</span>
-                </label>
-            </div>
-        </fieldset>
-
+            <!-- ===== 光照调节分组（阴影+明暗） ===== -->
+            <fieldset class="fieldset-light">
+                <legend>💡 光照调节</legend>
+                <div style="margin-bottom:10px;">
+                    <label>
+                        <span class="label-name">阴 影</span>
+                        <input type="range" id="shadowSlider" min="0" max="1" step="0.01" value="0.6"
+                            style="vertical-align:middle;width:120px;">
+                        <span class="label-value" id="shadowValue">0.60</span>
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        <span class="label-name">明 暗</span>
+                        <input type="range" id="brightnessSlider" min="0.01" max="1" step="0.01" value="0.7"
+                            style="vertical-align:middle;width:120px;">
+                        <span class="label-value" id="brightnessValue">0.70</span>
+                    </label>
+                </div>
+            </fieldset>
+        </div>
     </div>
 
     <!-- 加载进度 -->
@@ -465,7 +541,7 @@
 
         // 8. 创建卡通水面
         async function createCartoonWater() {
-            const waterGeometry = new THREE.PlaneGeometry(200, 200, 128, 128);
+            const waterGeometry = new THREE.PlaneGeometry(400, 400, 2, 2);  //宽高 + 分段数
             waterGeometry.computeTangents();
             const waterVertex = await loadShader('shaders/cartoonWater.vert');
             const waterFragment = await loadShader('shaders/cartoonWater.frag');
