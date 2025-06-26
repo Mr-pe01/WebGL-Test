@@ -190,11 +190,17 @@
 
         /* 设置面板自适应宽度和滚动 */
         .settings-panel {
-            width: 95vw;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 90vw;
             max-width: 420px;
-            min-width: 180px;
+            height: 100vh;
+            max-height: 100vh;
             overflow-y: auto;
+            overflow-x: hidden;
             box-sizing: border-box;
+            z-index: 1000;
             font-size: 16px;
         }
 
@@ -261,6 +267,16 @@
             .settings-panel input[type=\"range\"] {
                 min-width: 30px;
                 max-width: 60vw;
+            }
+        }
+
+        /* 横屏适配 */
+        @media (orientation: landscape) {
+            .settings-panel {
+                width: 60vw;
+                max-width: 420px;
+                height: 100vh;
+                max-height: 100vh;
             }
         }
     </style>
