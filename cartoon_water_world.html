@@ -41,7 +41,7 @@
             /* 宽度100%视口宽度 - 全屏宽度 */
             height: 100vh;
             /* 高度100%视口高度 - 全屏高度 */
-            /* cursor: grab; */
+            cursor: grab;
             /* 鼠标样式 - 显示可抓取的手型 */
         }
 
@@ -186,63 +186,6 @@
             font-weight: bold;
             color: #4ecdc4;
             margin-right: 8px;
-        }
-
-        /* 设置面板自适应宽度和滚动 */
-        .settings-panel {
-            width: 90vw;
-            max-width: 420px;
-            min-width: 220px;
-            overflow-y: auto;
-            box-sizing: border-box;
-        }
-
-        /* 右下角说明面板自适应 */
-        .controls-panel {
-            max-width: 90vw;
-            font-size: 13px;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-
-        /* 针对竖屏优化（手机竖屏） */
-        @media (max-width: 600px) and (orientation: portrait) {
-            .settings-panel {
-                width: 98vw;
-                max-width: none;
-                min-width: 0;
-                left: 1vw;
-                top: 1vw;
-                transform: none;
-                font-size: 15px;
-                padding: 10px;
-            }
-            .controls-panel {
-                right: 1vw;
-                bottom: 1vw;
-                font-size: 12px;
-                padding: 6px;
-            }
-        }
-
-        /* 针对横屏优化（手机横屏） */
-        @media (max-width: 900px) and (orientation: landscape) {
-            .settings-panel {
-                width: 60vw;
-                max-width: none;
-                min-width: 0;
-                left: 1vw;
-                top: 1vw;
-                transform: none;
-                font-size: 13px;
-                padding: 8px;
-            }
-            .controls-panel {
-                right: 1vw;
-                bottom: 1vw;
-                font-size: 11px;
-                padding: 4px;
-            }
         }
     </style>
 </head>
