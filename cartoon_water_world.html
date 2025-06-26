@@ -11,114 +11,53 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/examples/js/utils/BufferGeometryUtils.min.js"></script>
     <!-- CSS样式开始 - 定义页面的外观和布局 -->
     <style>
-        /* =================== 🎨 卡通风格CSS =================== */
-        /* CSS重置 - 消除浏览器默认样式差异 */
-        * {
-            margin: 0;
-            /* 外边距设为0 - 消除元素间的默认间距 */
-            padding: 0;
-            /* 内边距设为0 - 消除元素内的默认间距 */
+        /* =================== 全局重置，确保无缝隙 =================== */
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
             box-sizing: border-box;
-            /* 边框盒模型 - width包含padding和border */
+            width: 100vw;
+            height: 100vh;
         }
 
-        /* body元素样式 - 定义整个页面的基础外观 */
         body {
-            /* 背景渐变 - 从左上到右下的渐变色 */
             background: linear-gradient(135deg, #87a0c0 0%, #15263f 100%);
-            /* 135度角渐变 */
             font-family: '微软雅黑', Arial, sans-serif;
-            /* 字体族 - 优先使用微软雅黑，备选Arial */
             overflow: hidden;
-            /* 隐藏滚动条 - 创造全屏3D体验 */
         }
 
-        /* WebGL画布样式 - 这是3D图形的渲染目标 */
         #canvas {
             display: block;
-            /* 块级元素 - 独占一行 */
             width: 100vw;
-            /* 宽度100%视口宽度 - 全屏宽度 */
             height: 100vh;
-            /* 高度100%视口高度 - 全屏高度 */
             cursor: grab;
-            /* 鼠标样式 - 显示可抓取的手型 */
         }
+        #canvas:active { cursor: grabbing; }
 
-        /* 鼠标按下时的样式 - 伪类选择器 */
-        #canvas:active {
-            cursor: grabbing;
-            /* 鼠标按下时显示抓取中的手型 */
-        }
-
-        /* =================== 控制面板（右下角说明） =================== */
-        /* 用于右下角的"鼠标控制说明"面板 */
-        .controls-panel {
+        /* =================== 设置面板 =================== */
+        .settings-panel {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: linear-gradient(-90deg, #60a4fd91 0%, #dd8fff42 100%);
-            color: rgb(23, 39, 54);
-            padding: 15px;
-            border-radius: 15px;
-            font-size: 13px;
-            border: 2px solid #1e6296;
-        }
-
-        /* =================== 加载进度条相关 =================== */
-        /* 进度条容器，居中显示 */
-        .progress-container {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            z-index: 2000;
-        }
-
-        /* 进度条上的文字 */
-        .progress-text {
+            top: 0; /* 贴紧顶部 */
+            left: 0; /* 贴紧左侧 */
+            right: auto;
+            margin: 0;
+            /* ====== 你可以手动调整以下参数 ====== */
+            width: 350px;      /* 面板宽度，建议300~420px之间 */
+            max-width: 95vw;   /* 最大宽度，防止超出屏幕 */
+            padding: 25px;     /* 面板内边距，建议15~30px */
+            font-size: 16px;   /* 面板基础字体大小，建议14~18px */
+            /* ====== 你可以手动调整以上参数 ====== */
+            height: auto;
+            max-height: 100vh; /* 超出时上下滚动 */
+            overflow-y: auto;
+            overflow-x: hidden;
+            box-sizing: border-box;
+            z-index: 1000;
+            background: linear-gradient(180deg,#2935a588 0%,#28679e86 100%);
             color: #2d3436;
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
-        }
-
-        /* 进度条本体 */
-        .progress-bar {
-            width: 300px;
-            height: 12px;
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 6px;
-            overflow: hidden;
-            border: 2px solid #fd79a8;
-        }
-
-        /* 进度条填充部分 */
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #fd79a8, #fdcb6e);
-            width: 0%;
-            transition: width 0.5s ease;
-            border-radius: 4px;
-        }
-
-        @media (max-width: 600px) {
-            .settings-panel {
-                /* 整体等比例缩小到80% */
-                transform: scale(0.45);
-                transform-origin: top left;
-                left: 0;
-                top: 0;
-                width: 320px;
-                /* 和PC端一致 */
-                max-width: none;
-                min-width: 0;
-                /* 其它PC端样式不用再重复 */
-            }
-
-            /* 不需要再单独设置字体、input宽高等 */
+            border-radius: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            border: 2px solid #7ea6e0;
         }
 
         /* 优化设置面板滑杆对齐样式 */
@@ -129,177 +68,110 @@
             margin-bottom: 8px;
             font-size: 15px;
         }
-
         .settings-panel input[type="range"] {
             flex: 1 1 60%;
             margin: 0 10px;
             min-width: 80px;
             max-width: 140px;
         }
-
         .settings-panel span {
             min-width: 90px;
-            /* 5个汉字宽度 */
             text-align: left;
             display: inline-block;
             color: #252e53;
             font-weight: bold;
         }
-
         .settings-panel fieldset {
             margin-bottom: 16px;
             padding: 10px 12px 8px 12px;
         }
-
         .settings-panel legend {
             font-size: 15px;
             padding: 0 8px;
         }
-
-        .settings-panel input[type="color"] {
-            margin-right: 8px;
-        }
-
-        /* 让滑杆和数值在一行 */
+        .settings-panel input[type="color"] { margin-right: 8px; }
         .settings-panel .slider-row {
             display: flex;
             align-items: center;
             margin-bottom: 8px;
         }
-
-        .settings-panel .slider-row label {
-            flex: 0 0 70px;
-            margin: 0;
-        }
-
-        .settings-panel .slider-row input[type="range"] {
-            flex: 1 1 60%;
-            margin: 0 10px;
-        }
-
-        .settings-panel .slider-row span {
-            flex: 0 0 40px;
-            text-align: right;
-        }
-
-        .slider-label {
-            font-weight: bold;
-            color: #4ecdc4;
-            margin-right: 8px;
-        }
-
-        /* 设置面板自适应宽度和滚动 */
-        .settings-panel {
-            position: fixed;
-            right: 0;   /* 贴紧右侧 */
-            top: 0;     /* 贴紧顶部 */
-            width: 350px;      /* 你想要的固定宽度 */
-            max-width: 95vw;   /* 防止超出屏幕 */
-            height: 100vh;
-            max-height: 100vh;
-            overflow-y: auto;
-            overflow-x: hidden;
-            box-sizing: border-box;
-            z-index: 1000;
-            font-size: 16px;
-        }
-
-        /* 右下角说明面板自适应 */
-        .controls-panel {
-            max-width: 90vw;
-            font-size: 13px;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-
-        /* 针对竖屏优化（手机竖屏） */
-        @media (max-width: 600px) and (orientation: portrait) {
-            .settings-panel {
-                width: 98vw;
-                max-width: none;
-                min-width: 0;
-                left: 1vw;
-                top: 1vw;
-                transform: none;
-                font-size: 13px;
-                padding: 6px;
-            }
-            .controls-panel {
-                right: 1vw;
-                bottom: 1vw;
-                font-size: 11px;
-                padding: 4px;
-            }
-            .settings-panel label,
-            .settings-panel .slider-row label,
-            .settings-panel .slider-label {
-                font-size: 12px;
-            }
-            .settings-panel input[type=\"range\"] {
-                min-width: 40px;
-                max-width: 90vw;
-            }
-        }
-
-        /* 针对横屏优化（手机横屏） */
-        @media (max-width: 900px) and (orientation: landscape) {
-            .settings-panel {
-                width: 60vw;
-                max-width: none;
-                min-width: 0;
-                left: 1vw;
-                top: 1vw;
-                transform: none;
-                font-size: 12px;
-                padding: 4px;
-            }
-            .controls-panel {
-                right: 1vw;
-                bottom: 1vw;
-                font-size: 10px;
-                padding: 2px;
-            }
-            .settings-panel label,
-            .settings-panel .slider-row label,
-            .settings-panel .slider-label {
-                font-size: 10px;
-            }
-            .settings-panel input[type=\"range\"] {
-                min-width: 30px;
-                max-width: 60vw;
-            }
-        }
-
-        /* 横屏适配 */
-        @media (orientation: landscape) {
-            .settings-panel {
-                width: 60vw;
-                max-width: 420px;
-                height: 100vh;
-                max-height: 100vh;
-            }
-        }
-
+        .settings-panel .slider-row label { flex: 0 0 70px; margin: 0; }
+        .settings-panel .slider-row input[type="range"] { flex: 1 1 60%; margin: 0 10px; }
+        .settings-panel .slider-row span { flex: 0 0 40px; text-align: right; }
+        .slider-label { font-weight: bold; color: #4ecdc4; margin-right: 8px; }
         .settings-panel fieldset,
         .settings-panel label,
         .settings-panel .slider-row {
             width: 100%;
             box-sizing: border-box;
         }
-
         .settings-panel input[type="range"] {
             width: 70%;
             min-width: 40px;
             max-width: 95%;
+        }
+        /* 移除transform: scale相关媒体查询和JS缩放 */
+        /* 移除.controls-panel相关样式 */
+        .controls-panel { display: none !important; }
+        @media (max-width: 600px) {
+            .settings-panel {
+                width: 98vw;
+                max-width: none;
+                min-width: 0;
+                left: 0;
+                top: 0;
+                font-size: 13px;
+                padding: 6px;
+            }
+        }
+        @media (max-width: 900px) and (orientation: landscape) {
+            .settings-panel {
+                width: 60vw;
+                max-width: none;
+                min-width: 0;
+                left: 0;
+                top: 0;
+                font-size: 12px;
+                padding: 4px;
+            }
+        }
+        .progress-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 2000;
+        }
+        .progress-text {
+            color: #ff7fff;
+            font-size: 24px;      /* 你可以自定义加载文字大小 */
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(54, 24, 40, 0.8);
+        }
+        .progress-bar {
+            width: 600px;         /* 你可以自定义进度条宽度 */
+            height: 8px;         /* 你可以自定义进度条高度 */
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 6px;
+            overflow: hidden;
+            border: 2px solid #fd79a8;
+            margin: 0 auto;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #fd79a8, #fdcb6e);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 4px;
         }
     </style>
 </head>
 
 <body>
     <!-- =================== 设置面板 =================== -->
-    <div class="settings-panel" style="position:fixed;top:20px;left:20px;background:linear-gradient(180deg,#2935a588 0%,#28679e86 100%);
-        color:#2d3436;padding:25px;border-radius:20px;max-width:420px;box-shadow:0 8px 24px rgba(0,0,0,0.08);
-        border:2px solid #7ea6e0;z-index:1000;">
+    <div class="settings-panel">
         <h2 style="color:#252e53;margin-bottom:18px;font-size:20px;">⚙️ 场景设置</h2>
 
         <!-- ===== 天空颜色分组（fieldset包围，两个拾色器并排） ===== -->
@@ -1013,17 +885,6 @@
                 waterMesh.material.uniforms.waveCount.value = MAX_WAVES;
             }
         });
-
-        function resizeSettingsPanel() {
-            const panel = document.querySelector('.settings-panel');
-            if (!panel) return;
-            const scaleW = window.innerWidth * 0.6 / 350; // 350是面板原始宽度
-            const scaleH = window.innerHeight * 0.6 / panel.offsetHeight;
-            const scale = Math.min(scaleW, scaleH, 1);
-            panel.style.transform = `scale(${scale})`;
-        }
-        window.addEventListener('resize', resizeSettingsPanel);
-        window.addEventListener('load', resizeSettingsPanel);
     </script>
 </body>
 
